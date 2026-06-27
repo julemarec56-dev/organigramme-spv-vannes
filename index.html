@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Organigramme SPV - CSP VANNES</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0F2137;--navy-dk:#1B2B4B;--red:#8B1A1A;--bg:#EEF2F7;--card:#fff;--border:#D4DBE8;--text:#1a1a18;--muted:#64748B;--sh:0 2px 8px rgba(0,0,0,.07)}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+/* HEADER */
+.page-header{background:#F5F7FA;border-bottom:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.06);position:relative}
+.page-header::before{content:'';position:absolute;left:0;top:0;bottom:0;width:6px;background:linear-gradient(180deg,#C41E3A 0%,#8B0000 100%)}
+.page-header-inner{max-width:1600px;margin:0 auto;padding:14px 28px 14px 36px;display:flex;align-items:center;gap:20px}
+.ph-flame{font-size:26px}
+.ph-divider{width:1px;height:36px;background:var(--border)}
+.ph-text h1{font-size:14px;font-weight:700;color:var(--navy-dk);letter-spacing:.7px;text-transform:uppercase}
+.ph-text p{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.2px;font-style:italic}
+.ph-badge{margin-left:auto;display:flex;align-items:center;gap:10px}
+.ph-badge-inner{border-radius:8px;padding:7px 16px;text-align:center;min-width:72px}
+.ph-badge .ph-n{font-size:22px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.5px}
+.ph-badge .ph-l{font-size:9px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.8px;margin-top:3px}
+.ph-lastmod{font-size:10px;color:var(--muted);font-style:italic;margin-left:8px}
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;height:60vh;flex-direction:column;gap:16px;color:var(--muted)}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--navy-dk);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* APP */
+.app{max-width:1600px;margin:0 auto;padding:1.5rem}
+.supervisor-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:1rem}
+.sup-card{background:var(--card);border:2px solid var(--navy-dk);border-radius:10px;padding:8px 16px;display:flex;align-items:center;gap:10px;min-width:200px;max-width:260px;box-shadow:var(--sh)}
+.sup-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#DBEAFE;color:var(--navy-dk);flex-shrink:0;overflow:hidden}
+.sup-avatar img{width:44px;height:44px;object-fit:cover;border-radius:50%}
+.sup-info{min-width:0}
+.sup-nom{font-size:12px;font-weight:700}
+.sup-grade{font-size:9px;padding:1px 6px;border-radius:4px;background:#DBEAFE;color:var(--navy-dk);display:inline-block;margin-top:2px}
+.sup-badge{font-size:9px;padding:1px 6px;border-radius:4px;background:var(--navy-dk);color:#fff;display:inline-block;margin-bottom:2px}
+.connector{display:flex;flex-direction:column;align-items:center;height:28px}
+.connector-v{width:2px;flex:1;background:var(--navy-dk);opacity:.3}
+.h-line{width:94%;height:2px;background:linear-gradient(90deg,transparent,var(--navy-dk),transparent);opacity:.18}
+.branch-lines{display:grid;grid-template-columns:repeat(5,1fr);width:94%}
+.branch-line{display:flex;justify-content:center}
+.branch-v{width:2px;height:22px;background:var(--navy-dk);opacity:.22}
+/* TEAMS */
+.teams-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:32px}
+.team-col{border-radius:12px;border:1px solid var(--border);overflow:hidden;background:var(--card);box-shadow:var(--sh)}
+.team-total-banner{text-align:center;padding:8px 8px 6px;font-weight:700;font-size:16px;line-height:1}
+.team-total-label{font-size:10px;font-weight:600;opacity:.7;margin-top:3px;text-transform:uppercase;letter-spacing:.6px}
+.team-header{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid rgba(0,0,0,.06)}
+.team-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.team-name{font-size:11px;font-weight:700;flex:1;text-transform:uppercase;letter-spacing:.5px}
+.team-members{padding:6px;display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:6px;min-height:60px}
+.member-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 5px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.mc-avatar{width:72px;height:72px;border-radius:50%;margin:0 auto 6px;font-size:18px;font-weight:600;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.mc-avatar img{width:72px;height:72px;object-fit:cover;border-radius:50%}
+.mc-nom{font-size:10px;font-weight:700}
+.mc-prenom{font-size:9px;color:var(--muted)}
+.mc-grade{font-size:8px;margin-top:3px;padding:1px 4px;border-radius:3px;display:inline-block}
+.role-slots{padding:6px 6px 0;display:grid;grid-template-columns:1fr 1fr;gap:5px;border-bottom:1px solid rgba(0,0,0,.08);margin-bottom:4px}
+.role-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 5px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.role-card.empty{border-style:dashed;color:var(--muted);font-size:10px;justify-content:center;min-height:40px}
+.role-av{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;overflow:hidden;margin:0 auto 6px}
+.role-av img{width:72px;height:72px;object-fit:cover;border-radius:50%}
+.role-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:1px 5px;border-radius:3px;margin-bottom:3px;display:inline-block}
+.role-name{font-size:10px;font-weight:700;line-height:1.2;word-break:break-word}
+.role-grade{font-size:8px;padding:1px 4px;border-radius:3px;display:inline-block;margin-top:3px}
+.team-empty{font-size:11px;color:var(--muted);padding:12px;text-align:center;grid-column:1/-1}
+/* PRINT */
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:var(--bg)}
+  .app{max-width:100%;padding:6px}
+  .teams-grid{grid-template-columns:repeat(5,1fr);gap:8px}
+  .team-col{break-inside:avoid;box-shadow:none}
+  .member-card{break-inside:avoid;box-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="page-header-inner">
+    <span class="ph-flame">🔥</span>
+    <div class="ph-divider"></div>
+    <div class="ph-text">
+      <h1>Organigramme des Sapeurs-Pompiers Volontaires</h1>
+      <p>Centre de Secours Principal de Vannes &nbsp;·&nbsp; <span id="last-modified"></span></p>
+    </div>
+    <div class="ph-badge">
+      <div class="ph-badge-inner" style="background:#1B2B4B">
+        <div class="ph-n" id="total-actifs">—</div>
+        <div class="ph-l">agents actifs</div>
+      </div>
+      <div class="ph-badge-inner" style="background:#374151">
+        <div class="ph-n" id="total-dispo">—</div>
+        <div class="ph-l">disponibilité</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div id="loading" class="loading">
+  <div class="spinner"></div>
+  <div>Chargement de l'organigramme…</div>
+</div>
+
+<div class="app" id="app" style="display:none">
+  <div class="supervisor-wrap">
+    <div id="chef-render"></div>
+    <div class="connector"><div class="connector-v"></div></div>
+    <div id="sup-render"></div>
+    <div class="connector"><div class="connector-v"></div></div>
+    <div class="h-line"></div>
+    <div class="branch-lines">
+      <div class="branch-line"><div class="branch-v"></div></div>
+      <div class="branch-line"><div class="branch-v"></div></div>
+      <div class="branch-line"><div class="branch-v"></div></div>
+      <div class="branch-line"><div class="branch-v"></div></div>
+      <div class="branch-line"><div class="branch-v"></div></div>
+    </div>
+  </div>
+  <div class="teams-grid" id="teams-grid"></div>
+</div>
+
+<script>
+const DB = 'https://orgamme-spv-vannes-default-rtdb.europe-west1.firebasedatabase.app';
+const TEAMS=[
+  {name:"Équipe 1",color:"#1E4D9B",bg:"#DBEAFE",light:"#EFF6FF"},
+  {name:"Équipe 2",color:"#166534",bg:"#DCFCE7",light:"#F0FDF4"},
+  {name:"Équipe 3",color:"#92400E",bg:"#FEF3C7",light:"#FFFBEB"},
+  {name:"Équipe 4",color:"#881337",bg:"#FFE4E6",light:"#FFF1F2"},
+  {name:"Disponibilité",color:"#374151",bg:"#E5E7EB",light:"#F9FAFB"}
+];
+const GORDER=["Colonel","Lieutenant-colonel","Commandant","Capitaine","Lieutenant","Sous-lieutenant","Adjudant-chef","Adjudant","Sergent-chef","Sergent","Caporal-chef","Caporal","Sapeur 1ere classe","Sapeur 2eme classe"];
+const GBG={"Colonel":"#DBEAFE","Lieutenant-colonel":"#DBEAFE","Commandant":"#DBEAFE","Capitaine":"#DBEAFE","Lieutenant":"#DBEAFE","Sous-lieutenant":"#DBEAFE","Adjudant-chef":"#DCFCE7","Adjudant":"#DCFCE7","Sergent-chef":"#DCFCE7","Sergent":"#DCFCE7","Caporal-chef":"#FEF3C7","Caporal":"#FEF3C7","Sapeur 1ere classe":"#FFE4E6","Sapeur 2eme classe":"#FFE4E6"};
+const GTX={"Colonel":"#1E3A8A","Lieutenant-colonel":"#1E3A8A","Commandant":"#1E3A8A","Capitaine":"#1E3A8A","Lieutenant":"#1E3A8A","Sous-lieutenant":"#1E3A8A","Adjudant-chef":"#14532D","Adjudant":"#14532D","Sergent-chef":"#14532D","Sergent":"#14532D","Caporal-chef":"#78350F","Caporal":"#78350F","Sapeur 1ere classe":"#881337","Sapeur 2eme classe":"#881337"};
+
+function ini(p,n){return((n||'')[0]||'').toUpperCase()+((p||'')[0]||'').toUpperCase()||'?'}
+
+async function load(){
+  try{
+    const res = await fetch(DB+'/organigramme.json');
+    const data = await res.json();
+    if(!data){document.getElementById('loading').innerHTML='<p style="color:#888">Aucune donnée disponible.</p>';return;}
+    render(data);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    if(data.lastmod){
+      const el=document.getElementById('last-modified');
+      if(el)el.textContent=data.lastmod;
+    }
+  }catch(e){
+    document.getElementById('loading').innerHTML='<p style="color:#c00">Erreur de chargement. Vérifiez votre connexion.</p>';
+  }
+}
+
+function render(data){
+  const members = data.members || [];
+  const supervisor = data.supervisor || {};
+  const chefBureau = data.chefBureau || {};
+  const teamRoles = data.teamRoles || TEAMS.map(()=>({chef:{},adjoint:{}}));
+  const dispoIdx = TEAMS.length-1;
+
+  document.getElementById('total-actifs').textContent = members.filter(m=>m.team!==dispoIdx).length;
+  document.getElementById('total-dispo').textContent = members.filter(m=>m.team===dispoIdx).length;
+
+  // Chef de bureau
+  const chefEl = document.getElementById('chef-render');
+  if(chefBureau.nom||chefBureau.prenom){
+    const av = chefBureau.photo?`<div class="sup-avatar"><img src="${chefBureau.photo}" alt="${chefBureau.nom}"></div>`:`<div class="sup-avatar">${ini(chefBureau.prenom,chefBureau.nom)}</div>`;
+    chefEl.innerHTML=`<div class="sup-card">${av}<div class="sup-info"><div class="sup-badge">${chefBureau.fonction||'Chef de bureau'}</div><div class="sup-nom">${(chefBureau.nom||'').toUpperCase()} ${chefBureau.prenom||''}</div><span class="sup-grade">${chefBureau.grade||''}</span></div></div>`;
+  }
+  // Superviseur
+  const supEl = document.getElementById('sup-render');
+  if(supervisor.nom||supervisor.prenom){
+    const av = supervisor.photo?`<div class="sup-avatar"><img src="${supervisor.photo}" alt="${supervisor.nom}"></div>`:`<div class="sup-avatar">${ini(supervisor.prenom,supervisor.nom)}</div>`;
+    supEl.innerHTML=`<div class="sup-card">${av}<div class="sup-info"><div class="sup-badge">${supervisor.fonction||'Coordonnateur'}</div><div class="sup-nom">${(supervisor.nom||'').toUpperCase()} ${supervisor.prenom||''}</div><span class="sup-grade">${supervisor.grade||''}</span></div></div>`;
+  }
+
+  // Teams
+  document.getElementById('teams-grid').innerHTML = TEAMS.map((t,ti)=>{
+    const list = members.filter(m=>m.team===ti).sort((a,b)=>{
+      const ia=GORDER.indexOf(a.grade),ib=GORDER.indexOf(b.grade);
+      return (ia===-1?99:ia)-(ib===-1?99:ib);
+    });
+    const roles = teamRoles[ti] && ti<dispoIdx ? `<div class="role-slots">
+      ${roleCardHTML(teamRoles[ti].chef||{},t.color,t.bg,"Chef d'équipe")}
+      ${roleCardHTML(teamRoles[ti].adjoint||{},t.color,t.bg,'Adjoint')}
+    </div>` : '';
+    const cards = list.map(m=>`
+      <div class="member-card">
+        <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
+          ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
+        </div>
+        <div class="mc-nom">${(m.nom||'').toUpperCase()}</div>
+        <div class="mc-prenom">${m.prenom||''}</div>
+        <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
+      </div>`).join('');
+    return`<div class="team-col" style="background:${t.light}">
+      <div class="team-total-banner" style="background:${t.bg};color:${t.color}">${list.length}<div class="team-total-label">agent${list.length>1?'s':''}</div></div>
+      <div class="team-header">
+        <div class="team-dot" style="background:${t.color}"></div>
+        <span class="team-name" style="color:${t.color}">${t.name}</span>
+      </div>
+      ${roles}
+      <div class="team-members">
+        ${cards||`<div class="team-empty">Aucun membre</div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function roleCardHTML(r, teamColor, teamBg, label){
+  if(!r||(!r.nom&&!r.prenom)){
+    return `<div class="role-card empty">— ${label}</div>`;
+  }
+  const av = r.photo
+    ?`<div class="role-av"><img src="${r.photo}" alt="${r.nom}"></div>`
+    :`<div class="role-av" style="background:${teamBg};color:${teamColor}">${ini(r.prenom,r.nom)}</div>`;
+  return`<div class="role-card">
+    <span class="role-label" style="background:${teamBg};color:${teamColor}">${label}</span>
+    ${av}
+    <div class="role-name">${(r.nom||'').toUpperCase()} ${r.prenom||''}</div>
+    <span class="role-grade" style="background:${GBG[r.grade]||'#eee'};color:${GTX[r.grade]||'#333'}">${r.grade||''}</span>
+  </div>`;
+}
+
+load();
+// Actualisation automatique toutes les 5 minutes
+setInterval(load, 5*60*1000);
+</script>
+</body>
+</html>

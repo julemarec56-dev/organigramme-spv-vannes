@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — Organigramme SPV - CSP VANNES</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0F2137;--navy-dk:#1B2B4B;--red:#8B1A1A;--bg:#EEF2F7;--card:#fff;--border:#D4DBE8;--text:#1a1a18;--muted:#64748B;--sh:0 2px 8px rgba(0,0,0,.07)}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* PASSWORD OVERLAY */
+#pw-overlay{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999}
+#pw-overlay.hidden{display:none}
+.pw-box{background:#fff;border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:380px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.pw-box .flame{font-size:48px;margin-bottom:1rem}
+.pw-box h2{font-size:18px;font-weight:700;color:var(--navy-dk);margin-bottom:4px}
+.pw-box p{font-size:13px;color:var(--muted);margin-bottom:1.5rem}
+.pw-box input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;font-size:16px;text-align:center;letter-spacing:4px;margin-bottom:12px}
+.pw-box input:focus{outline:none;border-color:var(--navy-dk)}
+.pw-box button{width:100%;padding:12px;background:var(--navy-dk);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer}
+.pw-error{color:#c00;font-size:13px;margin-bottom:10px;display:none}
+
+/* SYNC STATUS */
+.sync-status{position:fixed;bottom:16px;right:16px;background:var(--navy-dk);color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+.sync-status.show{opacity:1}
+.sync-status.error{background:#c00}
+
+/* HEADER */
+.page-header{background:#F5F7FA;border-bottom:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.06);position:relative}
+.page-header::before{content:'';position:absolute;left:0;top:0;bottom:0;width:6px;background:linear-gradient(180deg,#C41E3A 0%,#8B0000 100%)}
+.page-header-inner{max-width:1600px;margin:0 auto;padding:14px 28px 14px 36px;display:flex;align-items:center;gap:20px}
+.ph-flame{font-size:26px}
+.ph-divider{width:1px;height:36px;background:var(--border)}
+.ph-text h1{font-size:14px;font-weight:700;color:var(--navy-dk);letter-spacing:.7px;text-transform:uppercase}
+.ph-text p{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.2px;font-style:italic}
+.ph-badge{margin-left:auto;display:flex;align-items:center;gap:10px}
+.ph-badge-inner{border-radius:8px;padding:7px 16px;text-align:center;min-width:72px}
+.ph-badge .ph-n{font-size:22px;font-weight:700;color:#fff;line-height:1;letter-spacing:-.5px}
+.ph-badge .ph-l{font-size:9px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.8px;margin-top:3px}
+
+/* APP */
+.app{max-width:1600px;margin:0 auto;padding:1.2rem 1.5rem}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;box-shadow:var(--sh)}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);font-size:13px;font-family:inherit;cursor:pointer;color:var(--text);transition:all .15s;font-weight:500;white-space:nowrap}
+.btn:hover{background:#f0f4fa;border-color:#b0bdd0}
+.btn.primary{background:var(--navy-dk);color:#fff;border-color:var(--navy-dk)}
+.btn.primary:hover{background:#243d62}
+.btn.warning{background:#92400E;color:#fff;border-color:#92400E}
+.btn.warning:hover{background:#7a350b}
+.btn.nouveaux{background:#166534;color:#fff;border-color:#166534;position:relative}
+.btn.nouveaux .badge{position:absolute;top:-6px;right:-6px;background:#C41E3A;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* SUPERVISOR */
+.supervisor-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:1rem}
+.sup-card{background:var(--card);border:2px solid var(--navy-dk);border-radius:10px;padding:8px 16px;display:flex;align-items:center;gap:10px;min-width:200px;max-width:260px;box-shadow:var(--sh);cursor:pointer;transition:transform .15s}
+.sup-card:hover{transform:translateY(-1px)}
+.sup-empty{border:2px dashed var(--navy-dk);border-radius:10px;padding:8px 16px;min-width:180px;text-align:center;cursor:pointer;color:var(--navy-dk);font-size:13px;opacity:.6}
+.sup-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#DBEAFE;color:var(--navy-dk);flex-shrink:0;overflow:hidden}
+.sup-avatar img{width:44px;height:44px;object-fit:cover;border-radius:50%}
+.sup-info{min-width:0}
+.sup-nom{font-size:12px;font-weight:700}
+.sup-grade{font-size:9px;padding:1px 6px;border-radius:4px;background:#DBEAFE;color:var(--navy-dk);display:inline-block;margin-top:2px}
+.sup-badge{font-size:9px;padding:1px 6px;border-radius:4px;background:var(--navy-dk);color:#fff;display:inline-block;margin-bottom:2px}
+.connector{display:flex;flex-direction:column;align-items:center;height:28px}
+.connector-v{width:2px;flex:1;background:var(--navy-dk);opacity:.3}
+.h-line{width:94%;height:2px;background:linear-gradient(90deg,transparent,var(--navy-dk),transparent);opacity:.18}
+.branch-lines{display:grid;grid-template-columns:repeat(5,1fr);width:94%}
+.branch-line{display:flex;justify-content:center}
+.branch-v{width:2px;height:22px;background:var(--navy-dk);opacity:.22}
+
+/* TEAMS */
+.teams-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:32px}
+.team-col{border-radius:12px;border:1px solid var(--border);overflow:hidden;transition:border-color .15s,box-shadow .15s;background:var(--card);box-shadow:var(--sh)}
+.team-col.drag-over{border-color:var(--drop-color)!important;box-shadow:0 0 0 3px rgba(0,0,0,.08)!important}
+.team-total-banner{text-align:center;padding:8px 8px 6px;font-weight:700;font-size:16px;line-height:1}
+.team-total-label{font-size:10px;font-weight:600;opacity:.7;margin-top:3px;text-transform:uppercase;letter-spacing:.6px}
+.team-header{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid rgba(0,0,0,.06)}
+.team-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.team-name{font-size:11px;font-weight:700;flex:1;text-transform:uppercase;letter-spacing:.5px}
+.team-add-btn{width:22px;height:22px;border:none;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600}
+.team-members{padding:6px;display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:6px;min-height:60px}
+.team-empty{font-size:11px;color:var(--muted);padding:12px;text-align:center;grid-column:1/-1}
+.drop-hint{display:none;font-size:11px;color:var(--muted);text-align:center;padding:8px;grid-column:1/-1}
+.team-col.drag-over .drop-hint{display:block}
+.vider-btn{width:calc(100% - 12px);margin:6px 6px 4px;padding:5px 0;background:none;border:1px dashed #bbb;border-radius:6px;font-size:11px;color:#888;cursor:pointer;display:block}
+
+/* MEMBER CARDS */
+.member-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 5px;text-align:center;cursor:grab;position:relative;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:transform .12s,box-shadow .12s}
+.member-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.member-card.dragging{opacity:.4}
+.mc-avatar{width:72px;height:72px;border-radius:50%;margin:0 auto 6px;font-size:18px;font-weight:600;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.mc-avatar img{width:72px;height:72px;object-fit:cover;border-radius:50%}
+.mc-nom{font-size:10px;font-weight:700}
+.mc-prenom{font-size:9px;color:var(--muted)}
+.mc-grade{font-size:8px;margin-top:3px;padding:1px 4px;border-radius:3px;display:inline-block}
+.mc-del{position:absolute;top:3px;right:3px;width:16px;height:16px;border:none;border-radius:50%;background:#fecdd3;color:#c00;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.member-card:hover .mc-del{opacity:1}
+
+/* NOUVEAUX badge on card */
+.mc-new-badge{position:absolute;top:3px;left:3px;background:#166534;color:#fff;font-size:7px;font-weight:700;padding:1px 4px;border-radius:3px;text-transform:uppercase;letter-spacing:.3px}
+
+/* ROLE SLOTS */
+.role-slots{padding:6px 6px 0;display:grid;grid-template-columns:1fr 1fr;gap:5px;border-bottom:1px solid rgba(0,0,0,.08);margin-bottom:4px}
+.role-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 5px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center}
+.role-card.empty{border-style:dashed;color:var(--muted);font-size:10px;justify-content:center;min-height:40px}
+.role-card.drag-over{border-color:var(--role-color)!important;background:#f0f4ff!important;border-style:solid!important}
+.role-av{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;overflow:hidden;margin:0 auto 6px}
+.role-av img{width:72px;height:72px;object-fit:cover;border-radius:50%}
+.role-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:1px 5px;border-radius:3px;margin-bottom:3px;display:inline-block}
+.role-name{font-size:10px;font-weight:700;line-height:1.2;word-break:break-word}
+.role-grade{font-size:8px;padding:1px 4px;border-radius:3px;display:inline-block;margin-top:3px}
+
+/* MODALS */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,33,55,.5);backdrop-filter:blur(2px);z-index:1000;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--card);border-radius:14px;padding:1.5rem;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:1rem;color:var(--navy-dk)}
+.field{margin-bottom:.8rem}
+.field label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px}
+.field input,.field select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text)}
+.field input:focus,.field select:focus{outline:none;border-color:var(--navy-dk)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.photo-zone{border:1.5px dashed var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#F8FAFC;margin-bottom:9px;transition:all .15s}
+.photo-zone:hover{background:#EEF2F7;border-color:#B0BDD0}
+.photo-zone img{display:none;width:68px;height:68px;border-radius:50%;object-fit:cover;margin:0 auto 6px}
+.photo-zone p{font-size:11px;color:var(--muted);margin-top:4px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)}
+.btn.danger{background:#FFE4E6;color:#881337;border-color:#FFE4E6}
+.btn.danger:hover{background:#fecdd3}
+
+/* DRAG GHOST */
+.drag-ghost{position:fixed;top:-200px;left:-200px;background:var(--card);border-radius:10px;padding:8px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.2);pointer-events:none;z-index:9999;min-width:80px}
+
+/* TIP */
+.tip{font-size:12px;color:var(--muted);text-align:center;padding:8px;margin-bottom:.5rem;font-style:italic}
+
+/* SEARCH */
+.search-hidden{display:none!important}
+.search-match{outline:2px solid #1E4D9B;outline-offset:1px}
+
+/* PRINT */
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .toolbar,.tip,.team-add-btn,.mc-del,.btn,.vider-btn,#search-input,#search-clear,#pw-overlay,.sync-status{display:none!important}
+  body{background:var(--bg)}
+  .app{max-width:100%;padding:6px}
+  .teams-grid{grid-template-columns:repeat(5,1fr);gap:6px}
+  .team-col,.member-card,.role-card,.sup-card{break-inside:avoid;box-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<!-- MOT DE PASSE -->
+<div id="pw-overlay">
+  <div class="pw-box">
+    <div class="flame">🔥</div>
+    <h2>Accès Administration</h2>
+    <p>Organigramme SPV — CSP Vannes</p>
+    <div class="pw-error" id="pw-error">Mot de passe incorrect</div>
+    <input type="password" id="pw-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPw()">
+    <button onclick="checkPw()">Accéder →</button>
+  </div>
+</div>
+
+<!-- SYNC STATUS -->
+<div class="sync-status" id="sync-status"></div>
+
+<header class="page-header">
+  <div class="page-header-inner">
+    <span class="ph-flame">🔥</span>
+    <div class="ph-divider"></div>
+    <div class="ph-text">
+      <h1>Organigramme des Sapeurs-Pompiers Volontaires</h1>
+      <p>Centre de Secours Principal de Vannes &nbsp;·&nbsp; <span id="last-modified"></span></p>
+    </div>
+    <div class="ph-badge">
+      <div class="ph-badge-inner" style="background:#1B2B4B">
+        <div class="ph-n" id="total-actifs">0</div>
+        <div class="ph-l">agents actifs</div>
+      </div>
+      <div class="ph-badge-inner" style="background:#374151">
+        <div class="ph-n" id="total-dispo">0</div>
+        <div class="ph-l">disponibilité</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+  <div class="toolbar">
+    <button class="btn primary" onclick="openAdd(0)">+ Ajouter agent</button>
+    <button class="btn nouveaux" id="btn-nouveaux" onclick="scrollToNouveaux()">👥 Nouveaux <span class="badge" id="badge-nouveaux" style="display:none">0</span></button>
+    <button class="btn" onclick="exportJSON()">⬇ Exporter JSON</button>
+    <button class="btn" onclick="document.getElementById('import-json-btn').click()">📂 Importer JSON</button>
+    <button class="btn warning" onclick="migrateFromLocalStorage()" title="Charger les données du fichier local vers Firebase">⬆ Migrer données locales</button>
+    <input type="file" id="import-json-btn" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="btn" onclick="exportImage()">🖼 Exporter image</button>
+    <div style="flex:1"></div>
+    <div style="position:relative;display:flex;align-items:center">
+      <input id="search-input" type="text" placeholder="🔍 Rechercher un agent…" oninput="filterCards(this.value)"
+        style="padding:7px 32px 7px 12px;border-radius:7px;border:1px solid var(--border);font-size:13px;font-family:inherit;width:220px">
+      <button onclick="clearSearch()" id="search-clear" style="display:none;position:absolute;right:8px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px">✕</button>
+    </div>
+  </div>
+
+  <div class="supervisor-wrap">
+    <div id="chef-render"></div>
+    <div class="connector"><div class="connector-v"></div></div>
+    <div id="sup-render"></div>
+    <div class="connector"><div class="connector-v"></div></div>
+    <div class="h-line"></div>
+    <div class="branch-lines">
+      <div class="branch-line"><div class="branch-v"></div></div>
+      <div class="branch-line"><div class="branch-v"></div></div>
+      <div class="branch-line"><div class="branch-v"></div></div>
+      <div class="branch-line"><div class="branch-v"></div></div>
+      <div class="branch-line"><div class="branch-v"></div></div>
+    </div>
+  </div>
+
+  <p class="tip">☰ Glissez une fiche pour changer d'équipe &nbsp;·&nbsp; Cliquez pour modifier</p>
+  <div class="teams-grid" id="teams-grid"></div>
+  <div id="nouveaux-section" style="margin-top:32px;display:none">
+    <h2 style="font-size:14px;font-weight:700;color:#166534;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">👥 Nouveaux agents en attente d'intégration</h2>
+    <div id="nouveaux-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"></div>
+  </div>
+</div>
+
+<!-- DRAG GHOST -->
+<div class="drag-ghost" id="ghost" style="display:none">
+  <div id="ghost-av" style="width:38px;height:38px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;overflow:hidden"></div>
+  <div id="ghost-nom" style="font-size:9px;font-weight:600;color:#1a1a18"></div>
+  <div id="ghost-grade" style="font-size:8px;margin-top:2px;padding:1px 4px;border-radius:3px;display:inline-block"></div>
+</div>
+
+<!-- MODAL AGENT -->
+<div class="modal-bg" id="modal">
+<div class="modal">
+  <h3 id="modal-title">Ajouter un agent</h3>
+  <div class="photo-zone" onclick="document.getElementById('photo-file').click()">
+    <img id="photo-preview" alt="photo">
+    <div id="photo-hint">📷<p>Cliquer pour ajouter une photo<br><small>(optionnel)</small></p></div>
+  </div>
+  <input type="file" id="photo-file" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+  <div class="field-row">
+    <div class="field"><label>NOM</label><input type="text" id="f-nom" placeholder="DUPONT" style="text-transform:uppercase"></div>
+    <div class="field"><label>Prénom</label><input type="text" id="f-prenom" placeholder="Jean"></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Grade</label>
+      <select id="f-grade">
+        <optgroup label="Officiers"><option>Colonel</option><option>Lieutenant-colonel</option><option>Commandant</option><option>Capitaine</option><option>Lieutenant</option><option>Sous-lieutenant</option></optgroup>
+        <optgroup label="Sous-officiers"><option>Adjudant-chef</option><option>Adjudant</option><option>Sergent-chef</option><option>Sergent</option></optgroup>
+        <optgroup label="Sapeurs"><option>Caporal-chef</option><option>Caporal</option><option>Sapeur 1ere classe</option><option selected>Sapeur 2eme classe</option></optgroup>
+      </select>
+    </div>
+    <div class="field"><label>Équipe</label>
+      <select id="f-team">
+        <option value="0">Équipe 1</option><option value="1">Équipe 2</option>
+        <option value="2">Équipe 3</option><option value="3">Équipe 4</option>
+        <option value="4">Disponibilité</option>
+      </select>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn" onclick="closeModal()">Annuler</button>
+    <button class="btn danger" id="btn-del" onclick="deleteCurrent()" style="display:none">🗑 Supprimer</button>
+    <button class="btn primary" onclick="save()">✔ Enregistrer</button>
+  </div>
+</div></div>
+
+<!-- MODAL ROLE -->
+<div class="modal-bg" id="modal-role">
+<div class="modal">
+  <h3 id="modal-role-title">Chef d'équipe</h3>
+  <div class="photo-zone" onclick="document.getElementById('role-photo-file').click()">
+    <img id="role-photo-preview" alt="photo">
+    <div id="role-photo-hint">📷<p>Cliquer pour ajouter une photo<br><small>(optionnel)</small></p></div>
+  </div>
+  <input type="file" id="role-photo-file" accept="image/*" style="display:none" onchange="handleRolePhoto(event)">
+  <div class="field-row">
+    <div class="field"><label>NOM</label><input type="text" id="role-nom" placeholder="MARTIN" style="text-transform:uppercase"></div>
+    <div class="field"><label>Prénom</label><input type="text" id="role-prenom" placeholder="Pierre"></div>
+  </div>
+  <div class="field"><label>Grade</label>
+    <select id="role-grade">
+      <option>Colonel</option><option>Lieutenant-colonel</option><option>Commandant</option><option>Capitaine</option><option>Lieutenant</option><option>Sous-lieutenant</option>
+      <option>Adjudant-chef</option><option selected>Adjudant</option><option>Sergent-chef</option><option>Sergent</option><option>Caporal-chef</option><option>Caporal</option>
+      <option>Sapeur 1ere classe</option><option>Sapeur 2eme classe</option>
+    </select>
+  </div>
+  <div class="modal-actions">
+    <button class="btn danger" onclick="clearRole()" style="margin-right:auto">🗑 Retirer</button>
+    <button class="btn" onclick="document.getElementById('modal-role').classList.remove('open')">Annuler</button>
+    <button class="btn primary" onclick="saveRole()">✔ Enregistrer</button>
+  </div>
+</div></div>
+
+<!-- MODAL CHEF DE BUREAU -->
+<div class="modal-bg" id="modal-chef">
+<div class="modal">
+  <h3>Chef de bureau</h3>
+  <div class="photo-zone" onclick="document.getElementById('chef-photo-file').click()">
+    <img id="chef-photo-preview" alt="photo chef de bureau">
+    <div id="chef-photo-hint">📷<p>Cliquer pour ajouter une photo<br><small>(optionnel)</small></p></div>
+  </div>
+  <input type="file" id="chef-photo-file" accept="image/*" style="display:none" onchange="handleChefPhoto(event)">
+  <div class="field-row">
+    <div class="field"><label>NOM</label><input type="text" id="chef-nom" placeholder="MARTIN" style="text-transform:uppercase"></div>
+    <div class="field"><label>Prénom</label><input type="text" id="chef-prenom" placeholder="Pierre"></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Grade</label>
+      <select id="chef-grade"><option>Colonel</option><option>Lieutenant-colonel</option><option selected>Commandant</option><option>Capitaine</option><option>Lieutenant</option><option>Sous-lieutenant</option><option>Adjudant-chef</option><option>Adjudant</option><option>Sergent-chef</option><option>Sergent</option></select>
+    </div>
+    <div class="field"><label>Fonction</label><input type="text" id="chef-fonction" value="Chef de bureau"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn" onclick="document.getElementById('modal-chef').classList.remove('open')">Annuler</button>
+    <button class="btn primary" onclick="saveChef()">✔ Enregistrer</button>
+  </div>
+</div></div>
+
+<!-- MODAL SUPERVISEUR -->
+<div class="modal-bg" id="modal-sup">
+<div class="modal">
+  <h3>Superviseur / Chef de centre</h3>
+  <div class="photo-zone" onclick="document.getElementById('sup-photo-file').click()">
+    <img id="sup-photo-preview" alt="photo superviseur">
+    <div id="sup-photo-hint">📷<p>Cliquer pour ajouter une photo<br><small>(optionnel)</small></p></div>
+  </div>
+  <input type="file" id="sup-photo-file" accept="image/*" style="display:none" onchange="handleSupPhoto(event)">
+  <div class="field-row">
+    <div class="field"><label>NOM</label><input type="text" id="sup-nom" placeholder="MARTIN" style="text-transform:uppercase"></div>
+    <div class="field"><label>Prénom</label><input type="text" id="sup-prenom" placeholder="Pierre"></div>
+  </div>
+  <div class="field-row">
+    <div class="field"><label>Grade</label>
+      <select id="sup-grade"><option>Colonel</option><option>Lieutenant-colonel</option><option selected>Commandant</option><option>Capitaine</option><option>Lieutenant</option><option>Sous-lieutenant</option></select>
+    </div>
+    <div class="field"><label>Fonction</label><input type="text" id="sup-fonction" value="Chef de centre"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn" onclick="document.getElementById('modal-sup').classList.remove('open')">Annuler</button>
+    <button class="btn primary" onclick="saveSup()">✔ Enregistrer</button>
+  </div>
+</div></div>
+
+<script>
+// ===================== CONFIG =====================
+const DB = 'https://orgamme-spv-vannes-default-rtdb.europe-west1.firebasedatabase.app';
+const ADMIN_PASSWORD = 'SPV56!'; // Changez ce mot de passe !
+
+// ===================== DONNÉES =====================
+const TEAMS=[
+  {name:"Équipe 1",color:"#1E4D9B",bg:"#DBEAFE",light:"#EFF6FF"},
+  {name:"Équipe 2",color:"#166534",bg:"#DCFCE7",light:"#F0FDF4"},
+  {name:"Équipe 3",color:"#92400E",bg:"#FEF3C7",light:"#FFFBEB"},
+  {name:"Équipe 4",color:"#881337",bg:"#FFE4E6",light:"#FFF1F2"},
+  {name:"Disponibilité",color:"#374151",bg:"#E5E7EB",light:"#F9FAFB"}
+];
+const GORDER=["Colonel","Lieutenant-colonel","Commandant","Capitaine","Lieutenant","Sous-lieutenant","Adjudant-chef","Adjudant","Sergent-chef","Sergent","Caporal-chef","Caporal","Sapeur 1ere classe","Sapeur 2eme classe"];
+const GBG={"Colonel":"#DBEAFE","Lieutenant-colonel":"#DBEAFE","Commandant":"#DBEAFE","Capitaine":"#DBEAFE","Lieutenant":"#DBEAFE","Sous-lieutenant":"#DBEAFE","Adjudant-chef":"#DCFCE7","Adjudant":"#DCFCE7","Sergent-chef":"#DCFCE7","Sergent":"#DCFCE7","Caporal-chef":"#FEF3C7","Caporal":"#FEF3C7","Sapeur 1ere classe":"#FFE4E6","Sapeur 2eme classe":"#FFE4E6"};
+const GTX={"Colonel":"#1E3A8A","Lieutenant-colonel":"#1E3A8A","Commandant":"#1E3A8A","Capitaine":"#1E3A8A","Lieutenant":"#1E3A8A","Sous-lieutenant":"#1E3A8A","Adjudant-chef":"#14532D","Adjudant":"#14532D","Sergent-chef":"#14532D","Sergent":"#14532D","Caporal-chef":"#78350F","Caporal":"#78350F","Sapeur 1ere classe":"#881337","Sapeur 2eme classe":"#881337"};
+
+let members=[], supervisor={nom:'',prenom:'',grade:'Commandant',fonction:'Chef de centre',photo:null};
+let chefBureau={nom:'',prenom:'',grade:'Commandant',fonction:'Chef de bureau',photo:null};
+const emptyRole=()=>({nom:'',prenom:'',grade:'Adjudant',photo:null});
+let teamRoles=[0,1,2,3,4].map(()=>({chef:emptyRole(),adjoint:emptyRole()}));
+let nouveaux=[];
+let editId=null,curPhoto=null,supPhoto=null,chefPhoto=null,rolePhoto=null,roleTarget=null,draggingId=null,mouseX=0,mouseY=0;
+
+// ===================== MOT DE PASSE =====================
+function checkPw(){
+  const v=document.getElementById('pw-input').value;
+  if(v===ADMIN_PASSWORD){
+    document.getElementById('pw-overlay').classList.add('hidden');
+    loadFromFirebase();
+    setInterval(loadNouveaux,30000);
+  } else {
+    document.getElementById('pw-error').style.display='block';
+    document.getElementById('pw-input').value='';
+  }
+}
+
+// ===================== FIREBASE =====================
+function showSync(msg,isError=false){
+  const el=document.getElementById('sync-status');
+  el.textContent=msg;el.classList.toggle('error',isError);
+  el.classList.add('show');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+async function loadFromFirebase(){
+  try{
+    const res=await fetch(DB+'/organigramme.json');
+    const data=await res.json();
+    if(data){
+      if(data.members) members=data.members;
+      if(data.supervisor) supervisor=data.supervisor;
+      if(data.chefBureau) chefBureau=data.chefBureau;
+      if(data.teamRoles) teamRoles=data.teamRoles;
+      if(data.lastmod){const el=document.getElementById('last-modified');if(el)el.textContent=data.lastmod;}
+    }
+    await loadNouveaux();
+    render();
+    showSync('✓ Données chargées');
+  }catch(e){
+    // Fallback localStorage
+    members=JSON.parse(localStorage.getItem('pv-members')||'[]');
+    supervisor=JSON.parse(localStorage.getItem('pv-supervisor')||JSON.stringify(supervisor));
+    chefBureau=JSON.parse(localStorage.getItem('pv-chef')||JSON.stringify(chefBureau));
+    teamRoles=JSON.parse(localStorage.getItem('pv-roles')||'null')||teamRoles;
+    render();
+    showSync('⚠ Hors-ligne — données locales',true);
+  }
+}
+
+async function loadNouveaux(){
+  try{
+    const res=await fetch(DB+'/organigramme/nouveaux.json');
+    const data=await res.json();
+    if(data && typeof data==='object'){
+      nouveaux=Object.entries(data).map(([fbKey,v])=>({...v,_fbKey:fbKey}));
+    } else {
+      nouveaux=[];
+    }
+    renderNouveaux();
+  }catch(e){nouveaux=[];renderNouveaux();}
+}
+
+async function saveToFirebase(){
+  const now=new Date();
+  const lastmod='Mis à jour le '+now.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})+' à '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const el=document.getElementById('last-modified');if(el)el.textContent=lastmod;
+  const data={members,supervisor,chefBureau,teamRoles,lastmod};
+  // Aussi localStorage
+  localStorage.setItem('pv-members',JSON.stringify(members));
+  localStorage.setItem('pv-supervisor',JSON.stringify(supervisor));
+  localStorage.setItem('pv-chef',JSON.stringify(chefBureau));
+  localStorage.setItem('pv-roles',JSON.stringify(teamRoles));
+  try{
+    const res=await fetch(DB+'/organigramme.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!res.ok) throw new Error();
+    showSync('✓ Synchronisé');
+  }catch(e){showSync('⚠ Sauvegardé localement',true);}
+}
+
+async function deleteNouveau(fbKey){
+  try{
+    await fetch(DB+'/organigramme/nouveaux/'+fbKey+'.json',{method:'DELETE'});
+    await loadNouveaux();
+  }catch(e){}
+}
+
+// ===================== MIGRATION =====================
+async function migrateFromLocalStorage(){
+  const m=localStorage.getItem('pv-members');
+  const s=localStorage.getItem('pv-supervisor');
+  const c=localStorage.getItem('pv-chef');
+  const r=localStorage.getItem('pv-roles');
+  if(!m||JSON.parse(m).length===0){alert('Aucune donnée locale trouvée.\n\nOuvrez d\'abord votre ancien fichier organigramme-pompiers-vannes.html dans le même navigateur, puis revenez ici.');return;}
+  if(!confirm('Migrer '+JSON.parse(m).length+' agents depuis vos données locales vers Firebase ?')) return;
+  if(m) members=JSON.parse(m);
+  if(s) supervisor=JSON.parse(s);
+  if(c) chefBureau=JSON.parse(c);
+  if(r) teamRoles=JSON.parse(r);
+  await saveToFirebase();
+  render();
+  alert('Migration réussie ! '+members.length+' agents chargés.');
+}
+
+function persist(){saveToFirebase();}
+function ini(p,n){return((n||'')[0]||'').toUpperCase()+((p||'')[0]||'').toUpperCase()||'?'}
+
+// ===================== RENDER =====================
+function renderChef(){
+  const c=chefBureau,el=document.getElementById('chef-render');
+  if(!c.nom&&!c.prenom){el.innerHTML=`<div class="sup-empty" onclick="openChef()"><span style="font-size:18px">+</span> Chef de bureau</div>`;return;}
+  const av=c.photo?`<div class="sup-avatar"><img src="${c.photo}" alt="${c.nom}"></div>`:`<div class="sup-avatar">${ini(c.prenom,c.nom)}</div>`;
+  el.innerHTML=`<div class="sup-card" onclick="openChef()">${av}<div class="sup-info"><div class="sup-badge">${c.fonction||'Chef de bureau'}</div><div class="sup-nom">${(c.nom||'').toUpperCase()} ${c.prenom||''}</div><span class="sup-grade">${c.grade}</span></div></div>`;
+}
+function renderSup(){
+  const s=supervisor,el=document.getElementById('sup-render');
+  if(!s.nom&&!s.prenom){el.innerHTML=`<div class="sup-empty" onclick="openSup()"><span style="font-size:18px">+</span> Définir le superviseur</div>`;return;}
+  const av=s.photo?`<div class="sup-avatar"><img src="${s.photo}" alt="${s.nom}"></div>`:`<div class="sup-avatar">${ini(s.prenom,s.nom)}</div>`;
+  el.innerHTML=`<div class="sup-card" onclick="openSup()">${av}<div class="sup-info"><div class="sup-badge">${s.fonction||'Chef de centre'}</div><div class="sup-nom">${(s.nom||'').toUpperCase()} ${s.prenom||''}</div><span class="sup-grade">${s.grade}</span></div></div>`;
+}
+
+function roleCardHTML(r,ti,type,teamColor,teamBg){
+  const label=type==='chef'?"Chef d'équipe":'Adjoint';
+  if(!r.nom&&!r.prenom){return`<div class="role-card empty" id="role-${ti}-${type}" data-role="${type}" style="--role-color:${teamColor}" onclick="openRole(${ti},'${type}')">+ ${label}</div>`;}
+  const av=r.photo?`<div class="role-av"><img src="${r.photo}" alt="${r.nom}"></div>`:`<div class="role-av" style="background:${teamBg};color:${teamColor}">${ini(r.prenom,r.nom)}</div>`;
+  return`<div class="role-card" id="role-${ti}-${type}" data-role="${type}" style="--role-color:${teamColor}" onclick="openRole(${ti},'${type}')">
+    <span class="role-label" style="background:${teamBg};color:${teamColor}">${label}</span>${av}
+    <div class="role-name">${(r.nom||'').toUpperCase()} ${r.prenom||''}</div>
+    <span class="role-grade" style="background:${GBG[r.grade]||'#eee'};color:${GTX[r.grade]||'#333'}">${r.grade}</span>
+  </div>`;
+}
+
+function render(){
+  renderChef();renderSup();
+  const dispoIdx=TEAMS.length-1;
+  document.getElementById('total-actifs').textContent=members.filter(m=>m.team!==dispoIdx).length;
+  document.getElementById('total-dispo').textContent=members.filter(m=>m.team===dispoIdx).length;
+  document.getElementById('teams-grid').innerHTML=TEAMS.map((t,ti)=>{
+    const list=members.filter(m=>m.team===ti).sort((a,b)=>{const ia=GORDER.indexOf(a.grade),ib=GORDER.indexOf(b.grade);return(ia===-1?99:ia)-(ib===-1?99:ib);});
+    const isDispo=ti===dispoIdx;
+    const cards=list.map(m=>`
+      <div class="member-card" id="mc-${m.id}" draggable="true" ondragstart="dragStart(event,'${m.id}')" ondragend="dragEnd(event)" onclick="openEdit('${m.id}')">
+        <button class="mc-del" onclick="event.stopPropagation();del('${m.id}')">✕</button>
+        <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
+          ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
+        </div>
+        <div class="mc-nom">${(m.nom||'').toUpperCase()}</div>
+        <div class="mc-prenom">${m.prenom||''}</div>
+        <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
+      </div>`).join('');
+    const roles=!isDispo?`<div class="role-slots">${roleCardHTML(teamRoles[ti].chef,ti,'chef',t.color,t.bg)}${roleCardHTML(teamRoles[ti].adjoint,ti,'adjoint',t.color,t.bg)}</div>`:'';
+    return`<div class="team-col" id="team-${ti}" style="background:${t.light};--drop-color:${t.color}" ondragover="dragOver(event,${ti})" ondragleave="dragLeave(event,${ti})" ondrop="drop(event,${ti})">
+      <div class="team-total-banner" style="background:${t.bg};color:${t.color}">${list.length}<div class="team-total-label">agent${list.length>1?'s':''}</div></div>
+      <div class="team-header">
+        <div class="team-dot" style="background:${t.color}"></div>
+        <span class="team-name" style="color:${t.color}">${t.name}</span>
+        ${!isDispo?`<button class="team-add-btn" onclick="openAdd(${ti})" style="background:${t.bg};color:${t.color}" title="Ajouter">+</button>`:''}
+      </div>
+      ${roles}
+      <div class="team-members">${cards||`<div class="team-empty">Aucun membre</div>`}<div class="drop-hint">⬇ Déposer ici</div></div>
+      ${!isDispo&&list.length?`<button class="vider-btn" onclick="videColonne(${ti})">⇒ Vider vers Disponibilité</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderNouveaux(){
+  const n=nouveaux.length;
+  const badge=document.getElementById('badge-nouveaux');
+  const section=document.getElementById('nouveaux-section');
+  badge.textContent=n;badge.style.display=n?'flex':'none';
+  section.style.display=n?'block':'none';
+  if(!n){document.getElementById('nouveaux-grid').innerHTML='';return;}
+  document.getElementById('nouveaux-grid').innerHTML=nouveaux.map(m=>`
+    <div style="background:#fff;border:1px solid #DCFCE7;border-radius:10px;padding:10px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+      <div style="width:72px;height:72px;border-radius:50%;margin:0 auto 8px;background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;overflow:hidden">
+        ${m.photo?`<img src="${m.photo}" style="width:72px;height:72px;object-fit:cover;border-radius:50%">`:`${ini(m.prenom,m.nom)}`}
+      </div>
+      <div style="font-size:11px;font-weight:700">${(m.nom||'').toUpperCase()}</div>
+      <div style="font-size:10px;color:#64748B">${m.prenom||''}</div>
+      <span style="font-size:8px;background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'};padding:1px 4px;border-radius:3px;display:inline-block;margin:4px 0">${m.grade}</span>
+      <div style="font-size:9px;color:#94A3B8;margin-bottom:6px">Soumis le ${m.soumisLe?new Date(m.soumisLe).toLocaleDateString('fr-FR'):'-'}</div>
+      <div style="display:flex;gap:4px;justify-content:center">
+        <button onclick="integrerNouveau('${m._fbKey}')" style="flex:1;padding:4px;background:#166534;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer">✓ Intégrer</button>
+        <button onclick="supprimerNouveau('${m._fbKey}')" style="padding:4px 6px;background:#FFE4E6;color:#881337;border:none;border-radius:5px;font-size:10px;cursor:pointer">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+async function integrerNouveau(fbKey){
+  const n=nouveaux.find(x=>x._fbKey===fbKey);if(!n)return;
+  const ti=parseInt(prompt('Dans quelle équipe intégrer '+n.prenom+' '+n.nom+'?\n0=Équipe 1, 1=Équipe 2, 2=Équipe 3, 3=Équipe 4, 4=Disponibilité','4'));
+  if(isNaN(ti)||ti<0||ti>4)return;
+  const m={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),nom:n.nom,prenom:n.prenom,grade:n.grade,photo:n.photo||null,team:ti};
+  members.push(m);
+  await deleteNouveau(fbKey);
+  await saveToFirebase();
+  render();
+}
+
+async function supprimerNouveau(fbKey){
+  if(!confirm('Supprimer cette demande ?'))return;
+  await deleteNouveau(fbKey);
+}
+
+function scrollToNouveaux(){document.getElementById('nouveaux-section').scrollIntoView({behavior:'smooth'});}
+
+// ===================== SUPERVISEUR / CHEF =====================
+function openChef(){
+  chefPhoto=chefBureau.photo||null;
+  document.getElementById('chef-nom').value=chefBureau.nom||'';
+  document.getElementById('chef-prenom').value=chefBureau.prenom||'';
+  document.getElementById('chef-grade').value=chefBureau.grade||'Commandant';
+  document.getElementById('chef-fonction').value=chefBureau.fonction||'Chef de bureau';
+  const p=document.getElementById('chef-photo-preview');
+  if(chefBureau.photo){p.src=chefBureau.photo;p.style.display='block';document.getElementById('chef-photo-hint').style.display='none';}
+  else{p.style.display='none';document.getElementById('chef-photo-hint').style.display='';}
+  document.getElementById('modal-chef').classList.add('open');
+}
+function saveChef(){
+  chefBureau={nom:document.getElementById('chef-nom').value.trim().toUpperCase(),prenom:document.getElementById('chef-prenom').value.trim(),grade:document.getElementById('chef-grade').value,fonction:document.getElementById('chef-fonction').value.trim()||'Chef de bureau',photo:chefPhoto||null};
+  document.getElementById('modal-chef').classList.remove('open');persist();renderChef();
+}
+function handleChefPhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{chefPhoto=ev.target.result;const p=document.getElementById('chef-photo-preview');p.src=chefPhoto;p.style.display='block';document.getElementById('chef-photo-hint').style.display='none';};r.readAsDataURL(f);}
+
+function openSup(){
+  supPhoto=supervisor.photo||null;
+  document.getElementById('sup-nom').value=supervisor.nom||'';
+  document.getElementById('sup-prenom').value=supervisor.prenom||'';
+  document.getElementById('sup-grade').value=supervisor.grade||'Commandant';
+  document.getElementById('sup-fonction').value=supervisor.fonction||'Chef de centre';
+  const p=document.getElementById('sup-photo-preview');
+  if(supervisor.photo){p.src=supervisor.photo;p.style.display='block';document.getElementById('sup-photo-hint').style.display='none';}
+  else{p.style.display='none';document.getElementById('sup-photo-hint').style.display='';}
+  document.getElementById('modal-sup').classList.add('open');
+}
+function saveSup(){
+  supervisor={nom:document.getElementById('sup-nom').value.trim().toUpperCase(),prenom:document.getElementById('sup-prenom').value.trim(),grade:document.getElementById('sup-grade').value,fonction:document.getElementById('sup-fonction').value.trim()||'Chef de centre',photo:supPhoto||null};
+  document.getElementById('modal-sup').classList.remove('open');persist();renderSup();
+}
+function handleSupPhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{supPhoto=ev.target.result;const p=document.getElementById('sup-photo-preview');p.src=supPhoto;p.style.display='block';document.getElementById('sup-photo-hint').style.display='none';};r.readAsDataURL(f);}
+
+// ===================== ROLES =====================
+function openRole(ti,type){
+  roleTarget={ti,type};const r=teamRoles[ti][type];rolePhoto=r.photo||null;
+  document.getElementById('modal-role-title').textContent=type==='chef'?"Chef d'équipe — "+TEAMS[ti].name:"Adjoint — "+TEAMS[ti].name;
+  document.getElementById('role-nom').value=r.nom||'';document.getElementById('role-prenom').value=r.prenom||'';document.getElementById('role-grade').value=r.grade||'Adjudant';
+  const p=document.getElementById('role-photo-preview');
+  if(r.photo){p.src=r.photo;p.style.display='block';document.getElementById('role-photo-hint').style.display='none';}
+  else{p.style.display='none';document.getElementById('role-photo-hint').style.display='';}
+  document.getElementById('modal-role').classList.add('open');
+}
+function saveRole(){const{ti,type}=roleTarget;teamRoles[ti][type]={nom:document.getElementById('role-nom').value.trim().toUpperCase(),prenom:document.getElementById('role-prenom').value.trim(),grade:document.getElementById('role-grade').value,photo:rolePhoto||null};document.getElementById('modal-role').classList.remove('open');persist();render();}
+function clearRole(){const{ti,type}=roleTarget;teamRoles[ti][type]=emptyRole();document.getElementById('modal-role').classList.remove('open');persist();render();}
+function handleRolePhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{rolePhoto=ev.target.result;const p=document.getElementById('role-photo-preview');p.src=rolePhoto;p.style.display='block';document.getElementById('role-photo-hint').style.display='none';};r.readAsDataURL(f);}
+
+// ===================== DRAG & DROP =====================
+function dragStart(e,id){
+  draggingId=id;const m=members.find(x=>x.id===id);
+  e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);
+  const gav=document.getElementById('ghost-av');
+  if(m.photo){gav.innerHTML=`<img src="${m.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`;}
+  else{gav.textContent=ini(m.prenom,m.nom);gav.style.background=GBG[m.grade];gav.style.color=GTX[m.grade];}
+  document.getElementById('ghost-nom').textContent=(m.nom||'').toUpperCase();
+  const gg=document.getElementById('ghost-grade');gg.textContent=m.grade;gg.style.background=GBG[m.grade];gg.style.color=GTX[m.grade];
+  document.getElementById('ghost').style.display='block';
+  e.dataTransfer.setDragImage(document.getElementById('ghost'),42,42);
+  setTimeout(()=>{const el=document.getElementById('mc-'+id);if(el)el.classList.add('dragging');},0);
+}
+function dragEnd(){
+  const id=draggingId;
+  if(id){
+    const el=document.getElementById('mc-'+id);if(el)el.classList.remove('dragging');
+    const els=document.elementsFromPoint(mouseX,mouseY);
+    const roleEl=els.find(el=>el.dataset&&el.dataset.role);
+    if(roleEl){
+      const type=roleEl.dataset.role;
+      const colEl=roleEl.closest('[id^="team-"]');
+      const ti=colEl?parseInt(colEl.id.split('-')[1]):-1;
+      const m=members.find(x=>x.id===id);
+      if(m&&ti>=0){teamRoles[ti][type]={nom:m.nom,prenom:m.prenom,grade:m.grade,photo:m.photo||null};persist();render();}
+    }
+  }
+  draggingId=null;
+  document.getElementById('ghost').style.display='none';
+  document.querySelectorAll('.team-col').forEach(c=>c.classList.remove('drag-over'));
+  document.querySelectorAll('.role-card.drag-over').forEach(c=>c.classList.remove('drag-over'));
+}
+function dragOver(e,ti){
+  e.preventDefault();mouseX=e.clientX;mouseY=e.clientY;
+  const els=document.elementsFromPoint(mouseX,mouseY);
+  const roleEl=els.find(el=>el.dataset&&el.dataset.role);
+  document.querySelectorAll('.role-card.drag-over').forEach(c=>c.classList.remove('drag-over'));
+  if(roleEl){roleEl.classList.add('drag-over');}
+  else{document.getElementById('team-'+ti).classList.add('drag-over');}
+}
+function dragLeave(e,ti){
+  if(!document.getElementById('team-'+ti).contains(e.relatedTarget)){
+    document.getElementById('team-'+ti).classList.remove('drag-over');
+    document.querySelectorAll('.role-card.drag-over').forEach(c=>c.classList.remove('drag-over'));
+  }
+}
+function drop(e,ti){
+  e.preventDefault();document.getElementById('team-'+ti).classList.remove('drag-over');
+  const id=e.dataTransfer.getData('text/plain')||draggingId;if(!id)return;
+  const m=members.find(x=>x.id===id);if(m&&m.team!==ti){m.team=ti;persist();render();}
+}
+
+// ===================== AGENTS CRUD =====================
+function openAdd(ti){editId=null;curPhoto=null;document.getElementById('modal-title').textContent='Ajouter un agent';document.getElementById('btn-del').style.display='none';document.getElementById('f-nom').value='';document.getElementById('f-prenom').value='';document.getElementById('f-grade').value='Sapeur 2eme classe';document.getElementById('f-team').value=ti??0;const p=document.getElementById('photo-preview');p.style.display='none';document.getElementById('photo-hint').style.display='';document.getElementById('modal').classList.add('open');}
+function openEdit(id){const m=members.find(x=>x.id===id);if(!m)return;editId=id;curPhoto=m.photo||null;document.getElementById('modal-title').textContent='Modifier';document.getElementById('btn-del').style.display='';document.getElementById('f-nom').value=m.nom||'';document.getElementById('f-prenom').value=m.prenom||'';document.getElementById('f-grade').value=m.grade;document.getElementById('f-team').value=m.team;const p=document.getElementById('photo-preview');if(m.photo){p.src=m.photo;p.style.display='block';document.getElementById('photo-hint').style.display='none';}else{p.style.display='none';document.getElementById('photo-hint').style.display='';}document.getElementById('modal').classList.add('open');}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function handlePhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{curPhoto=ev.target.result;const p=document.getElementById('photo-preview');p.src=curPhoto;p.style.display='block';document.getElementById('photo-hint').style.display='none';};r.readAsDataURL(f);}
+function save(){const nom=document.getElementById('f-nom').value.trim().toUpperCase();const prenom=document.getElementById('f-prenom').value.trim();if(!nom||!prenom){alert('NOM et Prénom obligatoires');return;}const d={id:editId||Date.now().toString(36)+Math.random().toString(36).slice(2,5),nom,prenom,grade:document.getElementById('f-grade').value,team:parseInt(document.getElementById('f-team').value),photo:curPhoto||null};if(editId){const i=members.findIndex(x=>x.id===editId);if(i>=0)members[i]=d;}else members.push(d);closeModal();persist();render();}
+function del(id){if(confirm('Supprimer cet agent ?')){members=members.filter(m=>m.id!==id);persist();render();}}
+function deleteCurrent(){if(editId){del(editId);closeModal();}}
+function videColonne(ti){const dispo=TEAMS.length-1;members.filter(m=>m.team===ti).forEach(m=>m.team=dispo);persist();render();}
+
+// ===================== RECHERCHE =====================
+function filterCards(q){
+  const btn=document.getElementById('search-clear');if(btn)btn.style.display=q?'block':'none';
+  const terms=q.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  document.querySelectorAll('.member-card').forEach(card=>{
+    if(!terms.length){card.classList.remove('search-hidden','search-match');return;}
+    const text=(card.querySelector('.mc-nom')?.textContent||'')+(card.querySelector('.mc-prenom')?.textContent||'')+(card.querySelector('.mc-grade')?.textContent||'');
+    const match=terms.every(t=>text.toLowerCase().includes(t));
+    card.classList.toggle('search-hidden',!match);card.classList.toggle('search-match',match);
+  });
+}
+function clearSearch(){const inp=document.getElementById('search-input');if(inp){inp.value='';filterCards('');}}
+
+// ===================== EXPORT =====================
+function exportJSON(){
+  const data={members,supervisor,chefBureau,teamRoles};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='Organigramme SPV - CSP VANNES '+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+function importJSON(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{const data=JSON.parse(ev.target.result);if(data.members)members=data.members;if(data.supervisor)supervisor=data.supervisor;if(data.chefBureau)chefBureau=data.chefBureau;if(data.teamRoles)teamRoles=data.teamRoles;persist();render();alert('Configuration chargée avec succès.');}
+    catch(err){alert('Fichier JSON invalide.');}
+  };reader.readAsText(file);e.target.value='';
+}
+function exportImage(){if(confirm('Pour exporter en image :\n\n1. Cliquez OK pour ouvrir la fenêtre d\'impression\n2. Choisissez "Enregistrer en PDF"\n\nConseil : zoomez d\'abord avec Ctrl+- pour voir toutes les équipes.')){window.print();}}
+</script>
+</body>
+</html>
