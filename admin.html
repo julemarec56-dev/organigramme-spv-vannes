@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin — Organigramme SPV - CSP VANNES</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0F2137">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SPV Vannes">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--navy:#0F2137;--navy-dk:#1B2B4B;--red:#8B1A1A;--bg:#EEF2F7;--card:#fff;--border:#D4DBE8;--text:#1a1a18;--muted:#64748B;--sh:0 2px 8px rgba(0,0,0,.07)}
@@ -686,5 +692,6 @@ function importJSON(e){
 }
 function exportImage(){if(confirm('Pour exporter en image :\n\n1. Cliquez OK pour ouvrir la fenêtre d\'impression\n2. Choisissez "Enregistrer en PDF"\n\nConseil : zoomez d\'abord avec Ctrl+- pour voir toutes les équipes.')){window.print();}}
 </script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script>
 </body>
 </html>
