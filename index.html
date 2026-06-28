@@ -129,7 +129,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="ph-divider"></div>
     <div class="ph-text">
       <h1>Organigramme des Sapeurs-Pompiers Volontaires</h1>
-      <p style="font-size:12px;font-weight:700;color:var(--navy-dk);letter-spacing:.4px;font-style:normal;margin-top:1px">CSP VANNES</p>
+      <div style="font-size:12px;font-weight:700;color:var(--navy-dk);letter-spacing:.4px;margin-top:1px">CSP VANNES</div>
       <p class="ph-lastmod"><span id="last-modified"></span></p>
     </div>
     <div class="ph-badge">
@@ -314,9 +314,9 @@ function render(data, nouveaux=[]){
             <div style="font-size:14px;font-weight:800;color:${t.color};text-transform:uppercase;letter-spacing:.5px">${t.name}</div>
             <div style="font-size:11px;color:${t.color};opacity:.7;margin-top:1px">${list.length} agent${list.length>1?'s':''}</div>
           </div>
-          <span class="acc-arrow" style="color:${t.color};font-size:13px">▼</span>
+          <span class="acc-arrow" style="color:${t.color};font-size:13px">▶</span>
         </div>
-        <div style="padding:10px 12px">
+        <div style="padding:10px 12px;display:none">
           ${chefHTML}${adjHTML}
           ${membersHTML||`<div style="text-align:center;color:#94a3b8;font-size:13px;padding:12px">Aucun membre</div>`}
         </div>
