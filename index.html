@@ -218,7 +218,7 @@ function render(data, nouveaux=[]){
   const nouvCards = nouveaux.map(m=>{
     const key='n_'+(m.id||m._fbKey||Math.random());
     window._memberMap[key]={m,t:nouvT};
-    return`<div class="member-card" style="cursor:pointer" onclick="openModal('${key}')">
+    return`<div class="member-card" style="cursor:pointer" data-mkey="${key}">
       <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
         ${m.photo?`<img src="${m.photo}" alt="">`:`${ini(m.prenom,m.nom)}`}
       </div>
@@ -238,7 +238,7 @@ function render(data, nouveaux=[]){
   const dispoCards=dispoList.map(m=>{
     const key='d_'+(m.id||Math.random());
     window._memberMap[key]={m,t:dispoT};
-    return`<div class="member-card" style="cursor:pointer" onclick="openModal('${key}')">
+    return`<div class="member-card" style="cursor:pointer" data-mkey="${key}">
       <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
         ${m.photo?`<img src="${m.photo}" alt="">`:`${ini(m.prenom,m.nom)}`}
       </div>
@@ -265,7 +265,7 @@ function render(data, nouveaux=[]){
     const cards = list.map(m=>{
       const key='m_'+(m.id||Math.random());
       window._memberMap[key]={m,t};
-      return`<div class="member-card" style="cursor:pointer" onclick="openModal('${key}')">
+      return`<div class="member-card" style="cursor:pointer" data-mkey="${key}">
         <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
           ${m.photo?`<img src="${m.photo}" alt="">`:`${ini(m.prenom,m.nom)}`}
         </div>
@@ -305,7 +305,7 @@ function roleCardHTML(r, teamColor, teamBg, label){
 load();
 setInterval(load, 5*60*1000);
 
-function openModal(key){
+function showModal(key){
   const entry=window._memberMap&&window._memberMap[key];
   if(!entry)return;
   const m=entry.m, t=entry.t;
@@ -325,12 +325,16 @@ function openModal(key){
   document.getElementById('modal-overlay').classList.add('open');
   document.body.style.overflow='hidden';
 }
-function closeModal(e){
-  if(e&&e.target!==document.getElementById('modal-overlay')&&!e.target.classList.contains('modal-close'))return;
+function closeModal(){
   document.getElementById('modal-overlay').classList.remove('open');
   document.body.style.overflow='';
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('modal-overlay').classList.remove('open');document.body.style.overflow='';}});
+document.addEventListener('click',e=>{
+  const card=e.target.closest('[data-mkey]');
+  if(card){showModal(card.dataset.mkey);return;}
+  if(e.target.id==='modal-overlay'||e.target.classList.contains('modal-close'))closeModal();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 </script>
 </body>
 </html>
