@@ -54,12 +54,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .connector{display:flex;flex-direction:column;align-items:center;height:28px}
 .connector-v{width:2px;flex:1;background:var(--navy-dk);opacity:.3}
 .h-line{width:94%;height:2px;background:linear-gradient(90deg,transparent,var(--navy-dk),transparent);opacity:.18}
-.branch-lines{display:grid;grid-template-columns:repeat(6,1fr);width:94%}
+.branch-lines{display:grid;grid-template-columns:repeat(5,1fr);width:94%}
 .branch-line{display:flex;justify-content:center}
 .branch-v{width:2px;height:22px;background:var(--navy-dk);opacity:.22}
 
 /* TEAMS */
-.teams-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:24px}
+.teams-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:24px}
 .team-col{border-radius:12px;border:1px solid var(--border);overflow:hidden;transition:border-color .15s,box-shadow .15s;background:var(--card);box-shadow:var(--sh)}
 .team-col.drag-over{border-color:var(--drop-color)!important;box-shadow:0 0 0 3px rgba(0,0,0,.08)!important}
 .team-total-banner{text-align:center;padding:8px 8px 6px;font-weight:700;font-size:16px;line-height:1}
@@ -188,7 +188,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="connector"><div class="connector-v"></div></div>
     <div class="h-line"></div>
     <div class="branch-lines">
-      <div class="branch-line"><div class="branch-v"></div></div>
       <div class="branch-line"><div class="branch-v"></div></div>
       <div class="branch-line"><div class="branch-v"></div></div>
       <div class="branch-line"><div class="branch-v"></div></div>
@@ -494,6 +493,25 @@ function render(){
       <div class="team-members">${cards||`<div class="team-empty">Aucun nouveau</div>`}</div>
     </div>`;
   })();
+  // Colonne Disponibilité séparée (index 4)
+  const dispoT=TEAMS[4];
+  const dispoList=members.filter(m=>m.team===4).sort((a,b)=>{const ia=GORDER.indexOf(a.grade),ib=GORDER.indexOf(b.grade);return(ia===-1?99:ia)-(ib===-1?99:ib);});
+  const dispoCards=dispoList.map(m=>`
+    <div class="member-card" id="mc-${m.id}" draggable="true" ondragstart="dragStart(event,'${m.id}')" ondragend="dragEnd(event)" onclick="openEdit('${m.id}')">
+      <button class="mc-del" onclick="event.stopPropagation();del('${m.id}')">✕</button>
+      <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
+        ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
+      </div>
+      <div class="mc-nom">${(m.nom||'').toUpperCase()}</div>
+      <div class="mc-prenom">${m.prenom||''}</div>
+      <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
+    </div>`).join('');
+  const dispoCol=`<div class="team-col" id="team-4" style="background:${dispoT.light};--drop-color:${dispoT.color}" ondragover="dragOver(event,4)" ondragleave="dragLeave(event,4)" ondrop="drop(event,4)">
+    <div class="team-total-banner" style="background:${dispoT.bg};color:${dispoT.color}">${dispoList.length}<div class="team-total-label">agent${dispoList.length>1?'s':''}</div></div>
+    <div class="team-header"><div class="team-dot" style="background:${dispoT.color}"></div><span class="team-name" style="color:${dispoT.color}">${dispoT.name}</span></div>
+    <div class="team-members">${dispoCards||`<div class="team-empty">Aucun membre</div>`}<div class="drop-hint">⬇ Déposer ici</div></div>
+  </div>`;
+
   document.getElementById('teams-grid').innerHTML=TEAMS.map((t,ti)=>{
     const list=members.filter(m=>m.team===ti).sort((a,b)=>{const ia=GORDER.indexOf(a.grade),ib=GORDER.indexOf(b.grade);return(ia===-1?99:ia)-(ib===-1?99:ib);});
     const isDispo=ti===dispoIdx;
@@ -519,7 +537,7 @@ function render(){
       <div class="team-members">${cards||`<div class="team-empty">Aucun membre</div>`}<div class="drop-hint">⬇ Déposer ici</div></div>
       ${!isDispo&&list.length?`<button class="vider-btn" onclick="videColonne(${ti})">⇒ Vider vers Disponibilité</button>`:''}
     </div>`;
-  }).join('') + nouveauxCol;
+  }).slice(0,4).join('') + `<div style="display:flex;flex-direction:column;gap:12px">${nouveauxCol}${dispoCol}</div>`;
 }
 
 function renderNouveaux(){

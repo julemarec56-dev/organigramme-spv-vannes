@@ -143,10 +143,15 @@ function ini(p,n){return((n||'')[0]||'').toUpperCase()+((p||'')[0]||'').toUpperC
 
 async function load(){
   try{
-    const res = await fetch(DB+'/organigramme.json');
+    const [res, resNouv] = await Promise.all([
+      fetch(DB+'/organigramme.json'),
+      fetch(DB+'/organigramme/nouveaux.json')
+    ]);
     const data = await res.json();
     if(!data){document.getElementById('loading').innerHTML='<p style="color:#888">Aucune donnée disponible.</p>';return;}
-    render(data);
+    const nouvRaw = await resNouv.json().catch(()=>null);
+    const nouveaux = nouvRaw ? Object.values(nouvRaw) : [];
+    render(data, nouveaux);
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
     if(data.lastmod){
@@ -158,7 +163,7 @@ async function load(){
   }
 }
 
-function render(data){
+function render(data, nouveaux=[]){
   const members = data.members || [];
   const supervisor = data.supervisor || {};
   const chefBureau = data.chefBureau || {};
@@ -181,13 +186,47 @@ function render(data){
     supEl.innerHTML=`<div class="sup-card">${av}<div class="sup-info"><div class="sup-badge">${supervisor.fonction||'Coordonnateur'}</div><div class="sup-nom">${(supervisor.nom||'').toUpperCase()} ${supervisor.prenom||''}</div><span class="sup-grade">${supervisor.grade||''}</span></div></div>`;
   }
 
+  // Colonne Nouveaux
+  const nouvCards = nouveaux.map(m=>`
+    <div class="member-card">
+      <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
+        ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
+      </div>
+      <div class="mc-nom">${(m.nom||'').toUpperCase()}</div>
+      <div class="mc-prenom">${m.prenom||''}</div>
+      <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
+    </div>`).join('');
+  const nouvCol=`<div class="team-col" style="background:#F5F3FF">
+    <div class="team-total-banner" style="background:#EDE9FE;color:#5B21B6">${nouveaux.length}<div class="team-total-label">nouveau${nouveaux.length>1?'x':''}</div></div>
+    <div class="team-header"><div class="team-dot" style="background:#7C3AED"></div><span class="team-name" style="color:#7C3AED">Nouveaux</span></div>
+    <div class="team-members">${nouvCards||`<div class="team-empty">Aucun nouveau</div>`}</div>
+  </div>`;
+
+  // Colonne Disponibilité
+  const dispoT=TEAMS[4];
+  const dispoList=members.filter(m=>m.team===4).sort((a,b)=>{const ia=GORDER.indexOf(a.grade),ib=GORDER.indexOf(b.grade);return(ia===-1?99:ia)-(ib===-1?99:ib);});
+  const dispoCards=dispoList.map(m=>`
+    <div class="member-card">
+      <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
+        ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
+      </div>
+      <div class="mc-nom">${(m.nom||'').toUpperCase()}</div>
+      <div class="mc-prenom">${m.prenom||''}</div>
+      <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
+    </div>`).join('');
+  const dispoCol=`<div class="team-col" style="background:${dispoT.light}">
+    <div class="team-total-banner" style="background:${dispoT.bg};color:${dispoT.color}">${dispoList.length}<div class="team-total-label">agent${dispoList.length>1?'s':''}</div></div>
+    <div class="team-header"><div class="team-dot" style="background:${dispoT.color}"></div><span class="team-name" style="color:${dispoT.color}">${dispoT.name}</span></div>
+    <div class="team-members">${dispoCards||`<div class="team-empty">Aucun membre</div>`}</div>
+  </div>`;
+
   // Teams
-  document.getElementById('teams-grid').innerHTML = TEAMS.map((t,ti)=>{
+  document.getElementById('teams-grid').innerHTML = TEAMS.slice(0,4).map((t,ti)=>{
     const list = members.filter(m=>m.team===ti).sort((a,b)=>{
       const ia=GORDER.indexOf(a.grade),ib=GORDER.indexOf(b.grade);
       return (ia===-1?99:ia)-(ib===-1?99:ib);
     });
-    const roles = teamRoles[ti] && ti<dispoIdx ? `<div class="role-slots">
+    const roles = teamRoles[ti] ? `<div class="role-slots">
       ${roleCardHTML(teamRoles[ti].chef||{},t.color,t.bg,"Chef d'équipe")}
       ${roleCardHTML(teamRoles[ti].adjoint||{},t.color,t.bg,'Adjoint')}
     </div>` : '';
@@ -211,7 +250,7 @@ function render(data){
         ${cards||`<div class="team-empty">Aucun membre</div>`}
       </div>
     </div>`;
-  }).join('');
+  }).join('') + `<div style="display:flex;flex-direction:column;gap:12px">${nouvCol}${dispoCol}</div>`;
 }
 
 function roleCardHTML(r, teamColor, teamBg, label){
