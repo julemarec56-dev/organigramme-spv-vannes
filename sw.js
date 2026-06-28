@@ -1,4 +1,4 @@
-const CACHE = 'spv-vannes-v1';
+const CACHE = 'spv-vannes-v3';
 const ASSETS = [
   '/organigramme-spv-vannes/',
   '/organigramme-spv-vannes/index.html',
