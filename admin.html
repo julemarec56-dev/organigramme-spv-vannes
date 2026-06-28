@@ -482,7 +482,7 @@ function roleCardHTML(r,ti,type,teamColor,teamBg){
   const label=type==='chef'?"Chef d'équipe":'Adjoint';
   if(!r.nom&&!r.prenom){return`<div class="role-card empty" id="role-${ti}-${type}" data-role="${type}" style="--role-color:${teamColor}" onclick="openRole(${ti},'${type}')">+ ${label}</div>`;}
   const av=r.photo?`<div class="role-av"><img src="${r.photo}" alt="${r.nom}"></div>`:`<div class="role-av" style="background:${teamBg};color:${teamColor}">${ini(r.prenom,r.nom)}</div>`;
-  return`<div class="role-card" id="role-${ti}-${type}" data-role="${type}" style="--role-color:${teamColor}" onclick="openRole(${ti},'${type}')">
+  return`<div class="role-card" id="role-${ti}-${type}" data-role="${type}" style="--role-color:${teamColor};cursor:grab" draggable="true" ondragstart="roleCardDragStart(event,${ti},'${type}')" ondragend="dragEnd(event)" onclick="openRole(${ti},'${type}')">
     <span class="role-label" style="background:${teamBg};color:${teamColor}">${label}</span>${av}
     <div class="role-name">${(r.nom||'').toUpperCase()} ${r.prenom||''}</div>
     <span class="role-grade" style="background:${GBG[r.grade]||'#eee'};color:${GTX[r.grade]||'#333'}">${r.grade}</span>
@@ -655,6 +655,19 @@ function clearRole(){const{ti,type}=roleTarget;teamRoles[ti][type]=emptyRole();d
 function handleRolePhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{rolePhoto=ev.target.result;const p=document.getElementById('role-photo-preview');p.src=rolePhoto;p.style.display='block';document.getElementById('role-photo-hint').style.display='none';};r.readAsDataURL(f);}
 
 // ===================== DRAG & DROP =====================
+function roleCardDragStart(e,ti,type){
+  const r=teamRoles[ti][type];
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain','role:'+ti+':'+type);
+  draggingId='role:'+ti+':'+type;
+  const gav=document.getElementById('ghost-av');
+  if(r.photo){gav.innerHTML=`<img src="${r.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`;}
+  else{gav.textContent=ini(r.prenom,r.nom);gav.style.background=GBG[r.grade]||'#ddd';gav.style.color=GTX[r.grade]||'#333';}
+  document.getElementById('ghost-nom').textContent=(r.nom||'').toUpperCase();
+  const gg=document.getElementById('ghost-grade');gg.textContent=r.grade;gg.style.background=GBG[r.grade]||'#eee';gg.style.color=GTX[r.grade]||'#333';
+  document.getElementById('ghost').style.display='block';
+  e.dataTransfer.setDragImage(document.getElementById('ghost'),42,42);
+}
 function dragStart(e,id){
   draggingId=id;const m=members.find(x=>x.id===id);
   e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);
@@ -703,6 +716,16 @@ function dragLeave(e,ti){
 function drop(e,ti){
   e.preventDefault();document.getElementById('team-'+ti).classList.remove('drag-over');
   const id=e.dataTransfer.getData('text/plain')||draggingId;if(!id)return;
+  if(id.startsWith('role:')){
+    const[,srcTi,type]=id.split(':');
+    const r=teamRoles[parseInt(srcTi)][type];
+    if(!r.nom)return;
+    _undoSnapshot=members.map(m=>({...m}));
+    members.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),nom:r.nom,prenom:r.prenom,grade:r.grade,photo:r.photo||null,team:ti});
+    teamRoles[parseInt(srcTi)][type]=emptyRole();
+    persist();render();if(ti===5)showUndo();
+    return;
+  }
   const m=members.find(x=>x.id===id);if(m&&m.team!==ti){m.team=ti;persist();render();}
 }
 
