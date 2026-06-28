@@ -164,6 +164,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <div class="ph-n" id="total-actifs">0</div>
         <div class="ph-l">agents actifs</div>
       </div>
+      <div class="ph-badge-inner" style="background:#5B21B6">
+        <div class="ph-n" id="total-nouveaux">0</div>
+        <div class="ph-l">nouveaux</div>
+      </div>
       <div class="ph-badge-inner" style="background:#374151">
         <div class="ph-n" id="total-dispo">0</div>
         <div class="ph-l">disponibilité</div>
@@ -460,6 +464,7 @@ function render(){
   const dispoIdx=TEAMS.length-1;
   document.getElementById('total-actifs').textContent=members.filter(m=>m.team!==dispoIdx).length;
   document.getElementById('total-dispo').textContent=members.filter(m=>m.team===dispoIdx).length;
+  document.getElementById('total-nouveaux').textContent=nouveaux.length;
   const nouveauxCol = (()=>{
     const n=nouveaux.length;
     const cards=nouveaux.map(m=>`
