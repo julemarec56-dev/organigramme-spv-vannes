@@ -62,7 +62,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .mc-nom{font-size:10px;font-weight:700}
 .mc-prenom{font-size:9px;color:var(--muted)}
 .mc-grade{font-size:8px;margin-top:3px;padding:1px 4px;border-radius:3px;display:inline-block}
-.role-slots{padding:6px 6px 0;display:grid;grid-template-columns:1fr 1fr;gap:5px;border-bottom:1px solid rgba(0,0,0,.08);margin-bottom:4px}
+.role-slots{padding:6px 6px 0;display:grid;grid-template-columns:1fr;gap:5px;border-bottom:1px solid rgba(0,0,0,.08);margin-bottom:4px}
 .role-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 5px;text-align:center;display:flex;flex-direction:column;align-items:center}
 .role-card.empty{border-style:dashed;color:var(--muted);font-size:10px;justify-content:center;min-height:40px}
 .role-av{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;overflow:hidden;margin:0 auto 6px}
@@ -83,6 +83,33 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .modal-nom{font-size:22px;font-weight:800;color:var(--navy-dk);letter-spacing:-.3px}
 .modal-prenom{font-size:15px;color:var(--muted);margin-top:2px;margin-bottom:16px}
 .modal-team{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:5px 14px;border-radius:20px;display:inline-block}
+/* MOBILE */
+@media(max-width:768px){
+  .page-header-inner{padding:10px 14px;gap:10px}
+  .ph-text h1{font-size:11px}
+  .ph-text p{display:none}
+  .ph-badge .ph-n{font-size:18px}
+  .ph-badge-inner{padding:5px 10px;min-width:54px}
+  .ph-lastmod{display:none}
+  .app{padding:.75rem .5rem}
+  /* Hiérarchie en colonne centrée */
+  .supervisor-wrap{margin-bottom:.5rem}
+  .sup-card{max-width:100%}
+  .h-line,.branch-lines{display:none}
+  /* Grille équipes : 1 colonne sur mobile */
+  .teams-grid{grid-template-columns:1fr;gap:14px}
+  /* Dans chaque équipe : grille de cartes 3 colonnes */
+  .team-members{grid-template-columns:repeat(3,1fr);gap:8px}
+  .role-slots{grid-template-columns:1fr;gap:8px}
+  .mc-avatar{width:60px;height:60px;font-size:15px}
+  .mc-avatar img{width:60px;height:60px}
+  .mc-nom{font-size:9px}
+  .mc-prenom{font-size:8px}
+  .role-av{width:60px;height:60px;font-size:15px}
+  .role-av img{width:60px;height:60px}
+  /* Connecteurs */
+  .connector{height:14px}
+}
 /* PRINT */
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
