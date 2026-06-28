@@ -379,6 +379,7 @@ const GORDER=["Colonel","Lieutenant-colonel","Commandant","Capitaine","Lieutenan
 const GBG={"Colonel":"#DBEAFE","Lieutenant-colonel":"#DBEAFE","Commandant":"#DBEAFE","Capitaine":"#DBEAFE","Lieutenant":"#DBEAFE","Sous-lieutenant":"#DBEAFE","Adjudant-chef":"#DCFCE7","Adjudant":"#DCFCE7","Sergent-chef":"#DCFCE7","Sergent":"#DCFCE7","Caporal-chef":"#FEF3C7","Caporal":"#FEF3C7","Sapeur 1ere classe":"#FFE4E6","Sapeur 2eme classe":"#FFE4E6"};
 const GTX={"Colonel":"#1E3A8A","Lieutenant-colonel":"#1E3A8A","Commandant":"#1E3A8A","Capitaine":"#1E3A8A","Lieutenant":"#1E3A8A","Sous-lieutenant":"#1E3A8A","Adjudant-chef":"#14532D","Adjudant":"#14532D","Sergent-chef":"#14532D","Sergent":"#14532D","Caporal-chef":"#78350F","Caporal":"#78350F","Sapeur 1ere classe":"#881337","Sapeur 2eme classe":"#881337"};
 
+let _undoSnapshot=null;
 let members=[], supervisor={nom:'',prenom:'',grade:'Commandant',fonction:'Chef de centre',photo:null};
 let chefBureau={nom:'',prenom:'',grade:'Commandant',fonction:'Chef de bureau',photo:null};
 const emptyRole=()=>({nom:'',prenom:'',grade:'Adjudant',photo:null});
@@ -714,7 +715,10 @@ function save(){const nom=document.getElementById('f-nom').value.trim().toUpperC
 function del(id){if(confirm('Supprimer cet agent ?')){members=members.filter(m=>m.id!==id);persist();render();}}
 function deleteCurrent(){if(editId){del(editId);closeModal();}}
 function videColonne(ti){members.filter(m=>m.team===ti).forEach(m=>m.team=4);persist();render();}
-function viderVersTampon(ti){if(!confirm('Vider l\'équipe vers le Tampon ?'))return;members.filter(m=>m.team===ti).forEach(m=>m.team=5);persist();render();}
+function viderVersTampon(ti){if(!confirm('Vider l\'équipe vers le Tampon ?'))return;_undoSnapshot=members.map(m=>({...m}));members.filter(m=>m.team===ti).forEach(m=>m.team=5);persist();render();showUndo();}
+function undoLast(){if(!_undoSnapshot)return;members=_undoSnapshot;_undoSnapshot=null;persist();render();hideUndo();}
+function showUndo(){let b=document.getElementById('undo-bar');if(!b){b=document.createElement('div');b.id='undo-bar';b.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1E293B;color:#fff;padding:10px 20px;border-radius:10px;display:flex;align-items:center;gap:12px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:14px';b.innerHTML='Action effectuée <button onclick="undoLast()" style="background:#F97316;border:none;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600">↩ Annuler</button><button onclick="hideUndo()" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:18px">✕</button>';document.body.appendChild(b);}b.style.display='flex';clearTimeout(b._t);b._t=setTimeout(hideUndo,8000);}
+function hideUndo(){const b=document.getElementById('undo-bar');if(b)b.style.display='none';}
 
 // ===================== RECHERCHE =====================
 function filterCards(q){
