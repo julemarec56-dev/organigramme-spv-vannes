@@ -9,17 +9,6 @@
 :root{--navy:#0F2137;--navy-dk:#1B2B4B;--red:#8B1A1A;--bg:#EEF2F7;--card:#fff;--border:#D4DBE8;--text:#1a1a18;--muted:#64748B;--sh:0 2px 8px rgba(0,0,0,.07)}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-/* PASSWORD OVERLAY */
-#pw-overlay{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999}
-#pw-overlay.hidden{display:none}
-.pw-box{background:#fff;border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:380px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.3)}
-.pw-box .flame{font-size:48px;margin-bottom:1rem}
-.pw-box h2{font-size:18px;font-weight:700;color:var(--navy-dk);margin-bottom:4px}
-.pw-box p{font-size:13px;color:var(--muted);margin-bottom:1.5rem}
-.pw-box input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;font-size:16px;text-align:center;letter-spacing:4px;margin-bottom:12px}
-.pw-box input:focus{outline:none;border-color:var(--navy-dk)}
-.pw-box button{width:100%;padding:12px;background:var(--navy-dk);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer}
-.pw-error{color:#c00;font-size:13px;margin-bottom:10px;display:none}
 
 /* SYNC STATUS */
 .sync-status{position:fixed;bottom:16px;right:16px;background:var(--navy-dk);color:#fff;padding:8px 16px;border-radius:20px;font-size:12px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
@@ -152,17 +141,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </head>
 <body>
 
-<!-- MOT DE PASSE -->
-<div id="pw-overlay">
-  <div class="pw-box">
-    <div class="flame">🔥</div>
-    <h2>Accès Administration</h2>
-    <p>Organigramme SPV — CSP Vannes</p>
-    <div class="pw-error" id="pw-error">Mot de passe incorrect</div>
-    <input type="password" id="pw-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPw()">
-    <button onclick="checkPw()">Accéder →</button>
-  </div>
-</div>
 
 <!-- SYNC STATUS -->
 <div class="sync-status" id="sync-status"></div>
@@ -191,12 +169,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="app">
   <div class="toolbar">
     <button class="btn primary" onclick="openAdd(0)">+ Ajouter agent</button>
-    <button class="btn nouveaux" id="btn-nouveaux" onclick="scrollToNouveaux()">👥 Nouveaux <span class="badge" id="badge-nouveaux" style="display:none">0</span></button>
     <button class="btn" onclick="exportJSON()">⬇ Exporter JSON</button>
     <button class="btn" onclick="document.getElementById('import-json-btn').click()">📂 Importer JSON</button>
     <button class="btn warning" onclick="migrateFromLocalStorage()" title="Charger les données du fichier local vers Firebase">⬆ Migrer données locales</button>
     <input type="file" id="import-json-btn" accept=".json" style="display:none" onchange="importJSON(event)">
-    <button class="btn" onclick="exportImage()">🖼 Exporter image</button>
     <div style="flex:1"></div>
     <div style="position:relative;display:flex;align-items:center">
       <input id="search-input" type="text" placeholder="🔍 Rechercher un agent…" oninput="filterCards(this.value)"
@@ -352,7 +328,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <script>
 // ===================== CONFIG =====================
 const DB = 'https://orgamme-spv-vannes-default-rtdb.europe-west1.firebasedatabase.app';
-const ADMIN_PASSWORD = 'SPV56!'; // Changez ce mot de passe !
 
 // ===================== DONNÉES =====================
 const TEAMS=[
@@ -373,18 +348,9 @@ let teamRoles=[0,1,2,3,4].map(()=>({chef:emptyRole(),adjoint:emptyRole()}));
 let nouveaux=[];
 let editId=null,curPhoto=null,supPhoto=null,chefPhoto=null,rolePhoto=null,roleTarget=null,draggingId=null,mouseX=0,mouseY=0;
 
-// ===================== MOT DE PASSE =====================
-function checkPw(){
-  const v=document.getElementById('pw-input').value;
-  if(v===ADMIN_PASSWORD){
-    document.getElementById('pw-overlay').classList.add('hidden');
-    loadFromFirebase();
-    setInterval(loadNouveaux,30000);
-  } else {
-    document.getElementById('pw-error').style.display='block';
-    document.getElementById('pw-input').value='';
-  }
-}
+// Chargement direct sans mot de passe
+loadFromFirebase();
+setInterval(loadNouveaux,30000);
 
 // ===================== FIREBASE =====================
 function showSync(msg,isError=false){
