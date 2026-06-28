@@ -372,7 +372,8 @@ const TEAMS=[
   {name:"Équipe 2",color:"#166534",bg:"#DCFCE7",light:"#F0FDF4"},
   {name:"Équipe 3",color:"#92400E",bg:"#FEF3C7",light:"#FFFBEB"},
   {name:"Équipe 4",color:"#881337",bg:"#FFE4E6",light:"#FFF1F2"},
-  {name:"Disponibilité",color:"#374151",bg:"#E5E7EB",light:"#F9FAFB"}
+  {name:"Disponibilité",color:"#374151",bg:"#E5E7EB",light:"#F9FAFB"},
+  {name:"Tampon",color:"#C2410C",bg:"#FFEDD5",light:"#FFF7ED"}
 ];
 const GORDER=["Colonel","Lieutenant-colonel","Commandant","Capitaine","Lieutenant","Sous-lieutenant","Adjudant-chef","Adjudant","Sergent-chef","Sergent","Caporal-chef","Caporal","Sapeur 1ere classe","Sapeur 2eme classe"];
 const GBG={"Colonel":"#DBEAFE","Lieutenant-colonel":"#DBEAFE","Commandant":"#DBEAFE","Capitaine":"#DBEAFE","Lieutenant":"#DBEAFE","Sous-lieutenant":"#DBEAFE","Adjudant-chef":"#DCFCE7","Adjudant":"#DCFCE7","Sergent-chef":"#DCFCE7","Sergent":"#DCFCE7","Caporal-chef":"#FEF3C7","Caporal":"#FEF3C7","Sapeur 1ere classe":"#FFE4E6","Sapeur 2eme classe":"#FFE4E6"};
@@ -489,8 +490,9 @@ function roleCardHTML(r,ti,type,teamColor,teamBg){
 
 function render(){
   renderChef();renderSup();
-  const dispoIdx=TEAMS.length-1;
-  document.getElementById('total-actifs').textContent=members.filter(m=>m.team!==dispoIdx).length;
+  const dispoIdx=4;
+  const tamponIdx=5;
+  document.getElementById('total-actifs').textContent=members.filter(m=>m.team!==dispoIdx&&m.team!==tamponIdx).length;
   document.getElementById('total-dispo').textContent=members.filter(m=>m.team===dispoIdx).length;
   document.getElementById('total-nouveaux').textContent=nouveaux.length;
   const nouveauxCol = (()=>{
@@ -534,6 +536,25 @@ function render(){
     <div class="team-members">${dispoCards||`<div class="team-empty">Aucun membre</div>`}<div class="drop-hint">⬇ Déposer ici</div></div>
   </div>`;
 
+  // Colonne Tampon (index 5)
+  const tamponT=TEAMS[5];
+  const tamponList=members.filter(m=>m.team===tamponIdx).sort((a,b)=>{const ia=GORDER.indexOf(a.grade),ib=GORDER.indexOf(b.grade);return(ia===-1?99:ia)-(ib===-1?99:ib);});
+  const tamponCards=tamponList.map(m=>`
+    <div class="member-card" id="mc-${m.id}" draggable="true" ondragstart="dragStart(event,'${m.id}')" ondragend="dragEnd(event)" onclick="openEdit('${m.id}')">
+      <button class="mc-del" onclick="event.stopPropagation();del('${m.id}')">✕</button>
+      <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
+        ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
+      </div>
+      <div class="mc-nom">${(m.nom||'').toUpperCase()}</div>
+      <div class="mc-prenom">${m.prenom||''}</div>
+      <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
+    </div>`).join('');
+  const tamponCol=`<div class="team-col" id="team-5" style="background:${tamponT.light};--drop-color:${tamponT.color}" ondragover="dragOver(event,5)" ondragleave="dragLeave(event,5)" ondrop="drop(event,5)">
+    <div class="team-total-banner" style="background:${tamponT.bg};color:${tamponT.color}">${tamponList.length}<div class="team-total-label">agent${tamponList.length>1?'s':''}</div></div>
+    <div class="team-header"><div class="team-dot" style="background:${tamponT.color}"></div><span class="team-name" style="color:${tamponT.color}">${tamponT.name}</span></div>
+    <div class="team-members">${tamponCards||`<div class="team-empty">Aucun membre</div>`}<div class="drop-hint">⬇ Déposer ici</div></div>
+  </div>`;
+
   document.getElementById('teams-grid').innerHTML=TEAMS.map((t,ti)=>{
     const list=members.filter(m=>m.team===ti).sort((a,b)=>{const ia=GORDER.indexOf(a.grade),ib=GORDER.indexOf(b.grade);return(ia===-1?99:ia)-(ib===-1?99:ib);});
     const isDispo=ti===dispoIdx;
@@ -557,9 +578,9 @@ function render(){
       </div>
       ${roles}
       <div class="team-members">${cards||`<div class="team-empty">Aucun membre</div>`}<div class="drop-hint">⬇ Déposer ici</div></div>
-      ${!isDispo&&list.length?`<button class="vider-btn" onclick="videColonne(${ti})">⇒ Vider vers Disponibilité</button>`:''}
+      ${!isDispo&&list.length?`<button class="vider-btn" onclick="viderVersTampon(${ti})">⇒ Vider vers Tampon</button>`:''}
     </div>`;
-  }).slice(0,4).join('') + `<div style="display:flex;flex-direction:column;gap:12px">${nouveauxCol}${dispoCol}</div>`;
+  }).slice(0,4).join('') + `<div style="display:flex;flex-direction:column;gap:12px">${nouveauxCol}${dispoCol}${tamponCol}</div>`;
 }
 
 function renderNouveaux(){
@@ -693,7 +714,8 @@ function handlePhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileR
 function save(){const nom=document.getElementById('f-nom').value.trim().toUpperCase();const prenom=document.getElementById('f-prenom').value.trim();if(!nom||!prenom){alert('NOM et Prénom obligatoires');return;}const d={id:editId||Date.now().toString(36)+Math.random().toString(36).slice(2,5),nom,prenom,grade:document.getElementById('f-grade').value,team:parseInt(document.getElementById('f-team').value),photo:curPhoto||null};if(editId){const i=members.findIndex(x=>x.id===editId);if(i>=0)members[i]=d;}else members.push(d);closeModal();persist();render();}
 function del(id){if(confirm('Supprimer cet agent ?')){members=members.filter(m=>m.id!==id);persist();render();}}
 function deleteCurrent(){if(editId){del(editId);closeModal();}}
-function videColonne(ti){const dispo=TEAMS.length-1;members.filter(m=>m.team===ti).forEach(m=>m.team=dispo);persist();render();}
+function videColonne(ti){members.filter(m=>m.team===ti).forEach(m=>m.team=4);persist();render();}
+function viderVersTampon(ti){if(!confirm('Vider l\'équipe vers le Tampon ?'))return;members.filter(m=>m.team===ti).forEach(m=>m.team=5);persist();render();}
 
 // ===================== RECHERCHE =====================
 function filterCards(q){
