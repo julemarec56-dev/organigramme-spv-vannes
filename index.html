@@ -210,17 +210,22 @@ function render(data, nouveaux=[]){
     supEl.innerHTML=`<div class="sup-card">${av}<div class="sup-info"><div class="sup-badge">${supervisor.fonction||'Coordonnateur'}</div><div class="sup-nom">${(supervisor.nom||'').toUpperCase()} ${supervisor.prenom||''}</div><span class="sup-grade">${supervisor.grade||''}</span></div></div>`;
   }
 
+  // Map globale id → {member, team} pour openModal
+  window._memberMap = {};
+
   // Colonne Nouveaux
-  const nouvT={name:'Nouveaux',color:'#7C3AED',bg:'#EDE9FE'};
-  const nouvCards = nouveaux.map(m=>`
-    <div class="member-card" style="cursor:pointer" onclick="openModal(${JSON.stringify(m).replace(/"/g,'&quot;')},${JSON.stringify(nouvT).replace(/"/g,'&quot;')})">
+  const nouvT={name:'Nouveaux',color:'#7C3AED',bg:'#EDE9FE',light:'#F5F3FF'};
+  const nouvCards = nouveaux.map(m=>{
+    const key='n_'+(m.id||m._fbKey||Math.random());
+    window._memberMap[key]={m,t:nouvT};
+    return`<div class="member-card" style="cursor:pointer" onclick="openModal('${key}')">
       <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
-        ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
+        ${m.photo?`<img src="${m.photo}" alt="">`:`${ini(m.prenom,m.nom)}`}
       </div>
       <div class="mc-nom">${(m.nom||'').toUpperCase()}</div>
       <div class="mc-prenom">${m.prenom||''}</div>
       <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
-    </div>`).join('');
+    </div>`;}).join('');
   const nouvCol=`<div class="team-col" style="background:#F5F3FF">
     <div class="team-total-banner" style="background:#EDE9FE;color:#5B21B6">${nouveaux.length}<div class="team-total-label">nouveau${nouveaux.length>1?'x':''}</div></div>
     <div class="team-header"><div class="team-dot" style="background:#7C3AED"></div><span class="team-name" style="color:#7C3AED">Nouveaux</span></div>
@@ -230,15 +235,17 @@ function render(data, nouveaux=[]){
   // Colonne Disponibilité
   const dispoT=TEAMS[4];
   const dispoList=members.filter(m=>m.team===4).sort((a,b)=>{const ia=GORDER.indexOf(a.grade),ib=GORDER.indexOf(b.grade);return(ia===-1?99:ia)-(ib===-1?99:ib);});
-  const dispoCards=dispoList.map(m=>`
-    <div class="member-card" style="cursor:pointer" onclick="openModal(${JSON.stringify(m).replace(/"/g,'&quot;')},${JSON.stringify(dispoT).replace(/"/g,'&quot;')})">
+  const dispoCards=dispoList.map(m=>{
+    const key='d_'+(m.id||Math.random());
+    window._memberMap[key]={m,t:dispoT};
+    return`<div class="member-card" style="cursor:pointer" onclick="openModal('${key}')">
       <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
-        ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
+        ${m.photo?`<img src="${m.photo}" alt="">`:`${ini(m.prenom,m.nom)}`}
       </div>
       <div class="mc-nom">${(m.nom||'').toUpperCase()}</div>
       <div class="mc-prenom">${m.prenom||''}</div>
       <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
-    </div>`).join('');
+    </div>`;}).join('');
   const dispoCol=`<div class="team-col" style="background:${dispoT.light}">
     <div class="team-total-banner" style="background:${dispoT.bg};color:${dispoT.color}">${dispoList.length}<div class="team-total-label">agent${dispoList.length>1?'s':''}</div></div>
     <div class="team-header"><div class="team-dot" style="background:${dispoT.color}"></div><span class="team-name" style="color:${dispoT.color}">${dispoT.name}</span></div>
@@ -255,15 +262,17 @@ function render(data, nouveaux=[]){
       ${roleCardHTML(teamRoles[ti].chef||{},t.color,t.bg,"Chef d'équipe")}
       ${roleCardHTML(teamRoles[ti].adjoint||{},t.color,t.bg,'Adjoint')}
     </div>` : '';
-    const cards = list.map(m=>`
-      <div class="member-card" style="cursor:pointer" onclick="openModal(${JSON.stringify(m).replace(/"/g,'&quot;')},${JSON.stringify(t).replace(/"/g,'&quot;')})">
+    const cards = list.map(m=>{
+      const key='m_'+(m.id||Math.random());
+      window._memberMap[key]={m,t};
+      return`<div class="member-card" style="cursor:pointer" onclick="openModal('${key}')">
         <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
-          ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
+          ${m.photo?`<img src="${m.photo}" alt="">`:`${ini(m.prenom,m.nom)}`}
         </div>
         <div class="mc-nom">${(m.nom||'').toUpperCase()}</div>
         <div class="mc-prenom">${m.prenom||''}</div>
         <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
-      </div>`).join('');
+      </div>`;}).join('');
     return`<div class="team-col" style="background:${t.light}">
       <div class="team-total-banner" style="background:${t.bg};color:${t.color}">${list.length}<div class="team-total-label">agent${list.length>1?'s':''}</div></div>
       <div class="team-header">
@@ -296,11 +305,14 @@ function roleCardHTML(r, teamColor, teamBg, label){
 load();
 setInterval(load, 5*60*1000);
 
-function openModal(m, t){
+function openModal(key){
+  const entry=window._memberMap&&window._memberMap[key];
+  if(!entry)return;
+  const m=entry.m, t=entry.t;
   const av=document.getElementById('modal-avatar');
   av.style.background=GBG[m.grade]||'#ddd';
   av.style.color=GTX[m.grade]||'#333';
-  av.innerHTML=m.photo?`<img src="${m.photo}" alt="${m.nom}" style="width:120px;height:120px;object-fit:cover;border-radius:50%">`:`${ini(m.prenom,m.nom)}`;
+  av.innerHTML=m.photo?`<img src="${m.photo}" style="width:120px;height:120px;object-fit:cover;border-radius:50%">`:`${ini(m.prenom,m.nom)}`;
   document.getElementById('modal-nom').textContent=(m.nom||'').toUpperCase();
   document.getElementById('modal-prenom').textContent=m.prenom||'';
   const gr=document.getElementById('modal-grade');
@@ -318,7 +330,7 @@ function closeModal(e){
   document.getElementById('modal-overlay').classList.remove('open');
   document.body.style.overflow='';
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('modal-overlay').classList.remove('open');});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('modal-overlay').classList.remove('open');document.body.style.overflow='';}});
 </script>
 </body>
 </html>
