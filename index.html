@@ -125,11 +125,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 <header class="page-header">
   <div class="page-header-inner">
-    <span class="ph-flame">🔥</span>
+    <span class="ph-flame" id="ph-flame">🔥</span>
     <div class="ph-divider"></div>
     <div class="ph-text">
       <h1>Organigramme des Sapeurs-Pompiers Volontaires</h1>
-      <p>Centre de Secours Principal de Vannes &nbsp;·&nbsp; <span id="last-modified"></span></p>
+      <p style="font-size:12px;font-weight:700;color:var(--navy-dk);letter-spacing:.4px;font-style:normal;margin-top:1px">CSP VANNES</p>
+      <p class="ph-lastmod"><span id="last-modified"></span></p>
     </div>
     <div class="ph-badge">
       <div class="ph-badge-inner" style="background:#1B2B4B">
@@ -145,8 +146,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </header>
 
 <div style="max-width:1600px;margin:0 auto;padding:.8rem 1.5rem;display:flex;justify-content:flex-end">
-  <button onclick="window.print()" style="padding:7px 16px;border-radius:8px;border:1px solid #D4DBE8;background:#fff;font-size:13px;font-family:inherit;cursor:pointer;color:#1B2B4B;font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,.06)">🖨 Exporter PDF</button>
+  <button onclick="window.print()" style="padding:7px 16px;border-radius:8px;border:1px solid #D4DBE8;background:#fff;font-size:13px;font-family:inherit;cursor:pointer;color:#1B2B4B;font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,.06)" id="btn-pdf">🖨 Exporter PDF</button>
 </div>
+<script>if(window.innerWidth<=700){document.getElementById('btn-pdf').style.display='none';document.getElementById('ph-flame').style.display='none';document.querySelector('.ph-divider').style.display='none';}</script>
 
 <!-- Modal agent -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
