@@ -259,8 +259,8 @@ function render(data, nouveaux=[]){
       return (ia===-1?99:ia)-(ib===-1?99:ib);
     });
     const roles = teamRoles[ti] ? `<div class="role-slots">
-      ${roleCardHTML(teamRoles[ti].chef||{},t.color,t.bg,"Chef d'équipe")}
-      ${roleCardHTML(teamRoles[ti].adjoint||{},t.color,t.bg,'Adjoint')}
+      ${roleCardHTML(teamRoles[ti].chef||{},t,"Chef d'équipe")}
+      ${roleCardHTML(teamRoles[ti].adjoint||{},t,'Adjoint')}
     </div>` : '';
     const cards = list.map(m=>{
       const key='m_'+(m.id||Math.random());
@@ -287,14 +287,17 @@ function render(data, nouveaux=[]){
   }).join('') + `<div style="display:flex;flex-direction:column;gap:12px">${nouvCol}${dispoCol}</div>`;
 }
 
-function roleCardHTML(r, teamColor, teamBg, label){
+function roleCardHTML(r, t, label){
+  const teamColor=t.color, teamBg=t.bg;
   if(!r||(!r.nom&&!r.prenom)){
     return `<div class="role-card empty">— ${label}</div>`;
   }
+  const key='r_'+(r.id||r.nom||Math.random());
+  window._memberMap[key]={m:r, t};
   const av = r.photo
-    ?`<div class="role-av"><img src="${r.photo}" alt="${r.nom}"></div>`
+    ?`<div class="role-av"><img src="${r.photo}" alt=""></div>`
     :`<div class="role-av" style="background:${teamBg};color:${teamColor}">${ini(r.prenom,r.nom)}</div>`;
-  return`<div class="role-card">
+  return`<div class="role-card" style="cursor:pointer" data-mkey="${key}">
     <span class="role-label" style="background:${teamBg};color:${teamColor}">${label}</span>
     ${av}
     <div class="role-name">${(r.nom||'').toUpperCase()} ${r.prenom||''}</div>
