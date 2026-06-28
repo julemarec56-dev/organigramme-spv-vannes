@@ -57,10 +57,13 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem 
         <img id="photo-preview" alt="photo">
         <div class="hint" id="photo-hint">
           <span class="icon">📷</span>
-          Cliquez pour ajouter votre photo<br>
-          <small style="color:#CBD5E1">(optionnel)</small>
+          Cliquez pour ajouter votre photo
         </div>
       </div>
+      <p style="font-size:11px;color:#64748B;text-align:center;margin:-8px 0 14px;line-height:1.5">
+        📋 <strong>Photo d'identité réglementaire obligatoire</strong><br>
+        Fond neutre · Visage dégagé · Datant de moins d'1 an
+      </p>
       <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(event)">
 
       <div class="field-row">
