@@ -171,7 +171,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <button class="btn primary" onclick="openAdd(0)">+ Ajouter agent</button>
     <button class="btn" onclick="exportJSON()">⬇ Exporter JSON</button>
     <button class="btn" onclick="document.getElementById('import-json-btn').click()">📂 Importer JSON</button>
-    <button class="btn warning" onclick="migrateFromLocalStorage()" title="Charger les données du fichier local vers Firebase">⬆ Migrer données locales</button>
     <input type="file" id="import-json-btn" accept=".json" style="display:none" onchange="importJSON(event)">
     <div style="flex:1"></div>
     <div style="position:relative;display:flex;align-items:center">
@@ -421,22 +420,6 @@ async function deleteNouveau(fbKey){
   }catch(e){}
 }
 
-// ===================== MIGRATION =====================
-async function migrateFromLocalStorage(){
-  const m=localStorage.getItem('pv-members');
-  const s=localStorage.getItem('pv-supervisor');
-  const c=localStorage.getItem('pv-chef');
-  const r=localStorage.getItem('pv-roles');
-  if(!m||JSON.parse(m).length===0){alert('Aucune donnée locale trouvée.\n\nOuvrez d\'abord votre ancien fichier organigramme-pompiers-vannes.html dans le même navigateur, puis revenez ici.');return;}
-  if(!confirm('Migrer '+JSON.parse(m).length+' agents depuis vos données locales vers Firebase ?')) return;
-  if(m) members=JSON.parse(m);
-  if(s) supervisor=JSON.parse(s);
-  if(c) chefBureau=JSON.parse(c);
-  if(r) teamRoles=JSON.parse(r);
-  await saveToFirebase();
-  render();
-  alert('Migration réussie ! '+members.length+' agents chargés.');
-}
 
 function persist(){saveToFirebase();}
 function ini(p,n){return((n||'')[0]||'').toUpperCase()+((p||'')[0]||'').toUpperCase()||'?'}
