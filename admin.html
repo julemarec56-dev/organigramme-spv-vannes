@@ -541,26 +541,7 @@ function render(){
 }
 
 function renderNouveaux(){
-  const n=nouveaux.length;
-  const badge=document.getElementById('badge-nouveaux');
-  const section=document.getElementById('nouveaux-section');
-  badge.textContent=n;badge.style.display=n?'flex':'none';
-  section.style.display=n?'block':'none';
-  if(!n){document.getElementById('nouveaux-grid').innerHTML='';return;}
-  document.getElementById('nouveaux-grid').innerHTML=nouveaux.map(m=>`
-    <div style="background:#fff;border:1px solid #DCFCE7;border-radius:10px;padding:10px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)">
-      <div style="width:72px;height:72px;border-radius:50%;margin:0 auto 8px;background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;overflow:hidden">
-        ${m.photo?`<img src="${m.photo}" style="width:72px;height:72px;object-fit:cover;border-radius:50%">`:`${ini(m.prenom,m.nom)}`}
-      </div>
-      <div style="font-size:11px;font-weight:700">${(m.nom||'').toUpperCase()}</div>
-      <div style="font-size:10px;color:#64748B">${m.prenom||''}</div>
-      <span style="font-size:8px;background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'};padding:1px 4px;border-radius:3px;display:inline-block;margin:4px 0">${m.grade}</span>
-      <div style="font-size:9px;color:#94A3B8;margin-bottom:6px">Soumis le ${m.soumisLe?new Date(m.soumisLe).toLocaleDateString('fr-FR'):'-'}</div>
-      <div style="display:flex;gap:4px;justify-content:center">
-        <button onclick="integrerNouveau('${m._fbKey}')" style="flex:1;padding:4px;background:#166534;color:#fff;border:none;border-radius:5px;font-size:10px;cursor:pointer">✓ Intégrer</button>
-        <button onclick="supprimerNouveau('${m._fbKey}')" style="padding:4px 6px;background:#FFE4E6;color:#881337;border:none;border-radius:5px;font-size:10px;cursor:pointer">✕</button>
-      </div>
-    </div>`).join('');
+  render();
 }
 
 async function integrerNouveau(fbKey){
