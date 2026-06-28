@@ -65,6 +65,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .role-name{font-size:10px;font-weight:700;line-height:1.2;word-break:break-word}
 .role-grade{font-size:8px;padding:1px 4px;border-radius:3px;display:inline-block;margin-top:3px}
 .team-empty{font-size:11px;color:var(--muted);padding:12px;text-align:center;grid-column:1/-1}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,33,55,.55);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:#fff;border-radius:20px;padding:32px 28px 24px;width:320px;max-width:90vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);transform:scale(.92);transition:transform .2s}
+.modal-overlay.open .modal-box{transform:scale(1)}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
+.modal-avatar{width:120px;height:120px;border-radius:50%;margin:0 auto 16px;font-size:38px;font-weight:700;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.modal-avatar img{width:120px;height:120px;object-fit:cover;border-radius:50%}
+.modal-grade{font-size:12px;font-weight:600;padding:3px 12px;border-radius:20px;display:inline-block;margin-bottom:12px}
+.modal-nom{font-size:22px;font-weight:800;color:var(--navy-dk);letter-spacing:-.3px}
+.modal-prenom{font-size:15px;color:var(--muted);margin-top:2px;margin-bottom:16px}
+.modal-team{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:5px 14px;border-radius:20px;display:inline-block}
 /* PRINT */
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
@@ -101,6 +113,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 <div style="max-width:1600px;margin:0 auto;padding:.8rem 1.5rem;display:flex;justify-content:flex-end">
   <button onclick="window.print()" style="padding:7px 16px;border-radius:8px;border:1px solid #D4DBE8;background:#fff;font-size:13px;font-family:inherit;cursor:pointer;color:#1B2B4B;font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,.06)">🖨 Exporter PDF</button>
+</div>
+
+<!-- Modal agent -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal-box" style="position:relative">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-avatar" id="modal-avatar"></div>
+    <div class="modal-grade" id="modal-grade"></div>
+    <div class="modal-nom" id="modal-nom"></div>
+    <div class="modal-prenom" id="modal-prenom"></div>
+    <div style="margin-top:14px"><span class="modal-team" id="modal-team"></span></div>
+  </div>
 </div>
 
 <div id="loading" class="loading">
@@ -187,8 +211,9 @@ function render(data, nouveaux=[]){
   }
 
   // Colonne Nouveaux
+  const nouvT={name:'Nouveaux',color:'#7C3AED',bg:'#EDE9FE'};
   const nouvCards = nouveaux.map(m=>`
-    <div class="member-card">
+    <div class="member-card" style="cursor:pointer" onclick="openModal(${JSON.stringify(m).replace(/"/g,'&quot;')},${JSON.stringify(nouvT).replace(/"/g,'&quot;')})">
       <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
         ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
       </div>
@@ -206,7 +231,7 @@ function render(data, nouveaux=[]){
   const dispoT=TEAMS[4];
   const dispoList=members.filter(m=>m.team===4).sort((a,b)=>{const ia=GORDER.indexOf(a.grade),ib=GORDER.indexOf(b.grade);return(ia===-1?99:ia)-(ib===-1?99:ib);});
   const dispoCards=dispoList.map(m=>`
-    <div class="member-card">
+    <div class="member-card" style="cursor:pointer" onclick="openModal(${JSON.stringify(m).replace(/"/g,'&quot;')},${JSON.stringify(dispoT).replace(/"/g,'&quot;')})">
       <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
         ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
       </div>
@@ -231,7 +256,7 @@ function render(data, nouveaux=[]){
       ${roleCardHTML(teamRoles[ti].adjoint||{},t.color,t.bg,'Adjoint')}
     </div>` : '';
     const cards = list.map(m=>`
-      <div class="member-card">
+      <div class="member-card" style="cursor:pointer" onclick="openModal(${JSON.stringify(m).replace(/"/g,'&quot;')},${JSON.stringify(t).replace(/"/g,'&quot;')})">
         <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
           ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
         </div>
@@ -269,8 +294,31 @@ function roleCardHTML(r, teamColor, teamBg, label){
 }
 
 load();
-// Actualisation automatique toutes les 5 minutes
 setInterval(load, 5*60*1000);
+
+function openModal(m, t){
+  const av=document.getElementById('modal-avatar');
+  av.style.background=GBG[m.grade]||'#ddd';
+  av.style.color=GTX[m.grade]||'#333';
+  av.innerHTML=m.photo?`<img src="${m.photo}" alt="${m.nom}" style="width:120px;height:120px;object-fit:cover;border-radius:50%">`:`${ini(m.prenom,m.nom)}`;
+  document.getElementById('modal-nom').textContent=(m.nom||'').toUpperCase();
+  document.getElementById('modal-prenom').textContent=m.prenom||'';
+  const gr=document.getElementById('modal-grade');
+  gr.textContent=m.grade||'';
+  gr.style.background=GBG[m.grade]||'#eee';
+  gr.style.color=GTX[m.grade]||'#333';
+  const tm=document.getElementById('modal-team');
+  tm.textContent=t?t.name:'';
+  if(t){tm.style.background=t.bg;tm.style.color=t.color;}
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('modal-overlay')&&!e.target.classList.contains('modal-close'))return;
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('modal-overlay').classList.remove('open');});
 </script>
 </body>
 </html>
