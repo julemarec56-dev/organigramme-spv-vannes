@@ -555,9 +555,8 @@ function render(){
     <div class="team-members">${tamponCards||`<div class="team-empty">Aucun membre</div>`}<div class="drop-hint">⬇ Déposer ici</div></div>
   </div>`;
 
-  document.getElementById('teams-grid').innerHTML=TEAMS.map((t,ti)=>{
+  document.getElementById('teams-grid').innerHTML=TEAMS.slice(0,4).map((t,ti)=>{
     const list=members.filter(m=>m.team===ti).sort((a,b)=>{const ia=GORDER.indexOf(a.grade),ib=GORDER.indexOf(b.grade);return(ia===-1?99:ia)-(ib===-1?99:ib);});
-    const isDispo=ti===dispoIdx;
     const cards=list.map(m=>`
       <div class="member-card" id="mc-${m.id}" draggable="true" ondragstart="dragStart(event,'${m.id}')" ondragend="dragEnd(event)" onclick="openEdit('${m.id}')">
         <button class="mc-del" onclick="event.stopPropagation();del('${m.id}')">✕</button>
@@ -568,19 +567,19 @@ function render(){
         <div class="mc-prenom">${m.prenom||''}</div>
         <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
       </div>`).join('');
-    const roles=!isDispo?`<div class="role-slots">${roleCardHTML(teamRoles[ti].chef,ti,'chef',t.color,t.bg)}${roleCardHTML(teamRoles[ti].adjoint,ti,'adjoint',t.color,t.bg)}</div>`:'';
+    const roles=`<div class="role-slots">${roleCardHTML(teamRoles[ti]?.chef,ti,'chef',t.color,t.bg)}${roleCardHTML(teamRoles[ti]?.adjoint,ti,'adjoint',t.color,t.bg)}</div>`;
     return`<div class="team-col" id="team-${ti}" style="background:${t.light};--drop-color:${t.color}" ondragover="dragOver(event,${ti})" ondragleave="dragLeave(event,${ti})" ondrop="drop(event,${ti})">
       <div class="team-total-banner" style="background:${t.bg};color:${t.color}">${list.length}<div class="team-total-label">agent${list.length>1?'s':''}</div></div>
       <div class="team-header">
         <div class="team-dot" style="background:${t.color}"></div>
         <span class="team-name" style="color:${t.color}">${t.name}</span>
-        ${!isDispo?`<button class="team-add-btn" onclick="openAdd(${ti})" style="background:${t.bg};color:${t.color}" title="Ajouter">+</button>`:''}
+        <button class="team-add-btn" onclick="openAdd(${ti})" style="background:${t.bg};color:${t.color}" title="Ajouter">+</button>
       </div>
       ${roles}
       <div class="team-members">${cards||`<div class="team-empty">Aucun membre</div>`}<div class="drop-hint">⬇ Déposer ici</div></div>
-      ${!isDispo&&list.length?`<button class="vider-btn" onclick="viderVersTampon(${ti})">⇒ Vider vers Tampon</button>`:''}
+      ${list.length?`<button class="vider-btn" onclick="viderVersTampon(${ti})">⇒ Vider vers Tampon</button>`:''}
     </div>`;
-  }).slice(0,4).join('') + `<div style="display:flex;flex-direction:column;gap:12px">${nouveauxCol}${dispoCol}${tamponCol}</div>`;
+  }).join('') + `<div style="display:flex;flex-direction:column;gap:12px">${nouveauxCol}${dispoCol}${tamponCol}</div>`;
 }
 
 function renderNouveaux(){
