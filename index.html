@@ -241,8 +241,8 @@ function filterAgents(q){
 async function load(){
   try{
     const [res, resNouv] = await Promise.all([
-      fetch(DB+'/organigramme.json'),
-      fetch(DB+'/organigramme/nouveaux.json')
+      fetch(DB+'/organigramme.json', {cache:'no-store'}),
+      fetch(DB+'/organigramme/nouveaux.json', {cache:'no-store'})
     ]);
     const data = await res.json();
     if(!data){document.getElementById('loading').innerHTML='<p style="color:#888">Aucune donnée disponible.</p>';return;}
