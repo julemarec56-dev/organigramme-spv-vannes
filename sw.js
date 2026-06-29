@@ -20,8 +20,8 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Firebase et ressources externes : réseau uniquement
-  if (e.request.url.includes('firebasedatabase') || e.request.url.includes('firebase')) {
+  // Firebase, admin et ressources externes : réseau uniquement
+  if (e.request.url.includes('firebasedatabase') || e.request.url.includes('firebase') || e.request.url.includes('admin.html')) {
     return;
   }
   e.respondWith(
