@@ -1,10 +1,5 @@
-const CACHE = 'spv-vannes-v5';
+const CACHE = 'spv-vannes-v6';
 const ASSETS = [
-  '/organigramme-spv-vannes/',
-  '/organigramme-spv-vannes/index.html',
-  '/organigramme-spv-vannes/admin.html',
-  '/organigramme-spv-vannes/nouveau.html',
-  '/organigramme-spv-vannes/manifest.json',
   '/organigramme-spv-vannes/icons/icon-192.png',
   '/organigramme-spv-vannes/icons/icon-512.png'
 ];
@@ -20,10 +15,14 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Firebase, admin et ressources externes : réseau uniquement
-  if (e.request.url.includes('firebasedatabase') || e.request.url.includes('firebase') || e.request.url.includes('admin.html')) {
+  // HTML, Firebase : toujours réseau
+  if (e.request.url.includes('firebasedatabase') ||
+      e.request.url.includes('firebase') ||
+      e.request.url.endsWith('.html') ||
+      e.request.url.endsWith('/')) {
     return;
   }
+  // Icônes uniquement : cache
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
@@ -33,7 +32,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => caches.match('/organigramme-spv-vannes/index.html'));
+      });
     })
   );
 });
