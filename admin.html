@@ -488,7 +488,8 @@ function render(){
   const tamponIdx=5;
   const rolesActifs=teamRoles.slice(0,4).reduce((n,r)=>{if(r.chef&&r.chef.nom)n++;if(r.adjoint&&r.adjoint.nom)n++;return n;},0);
   const supActif=(supervisor&&supervisor.nom)?1:0;
-  document.getElementById('total-actifs').textContent=members.filter(m=>m.team!==dispoIdx&&m.team!==tamponIdx).length+rolesActifs+supActif;
+  const chefKey=chefBureau&&chefBureau.nom?(chefBureau.nom+'|'+(chefBureau.prenom||'')):null;
+  document.getElementById('total-actifs').textContent=members.filter(m=>m.team!==dispoIdx&&m.team!==tamponIdx&&!(chefKey&&(m.nom||'')+'|'+(m.prenom||'')===chefKey)).length+rolesActifs+supActif;
   document.getElementById('total-dispo').textContent=members.filter(m=>m.team===dispoIdx).length;
   document.getElementById('total-nouveaux').textContent=nouveaux.length;
   const nouveauxCol = (()=>{

@@ -62,7 +62,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .mc-nom{font-size:10px;font-weight:700}
 .mc-prenom{font-size:9px;color:var(--muted)}
 .mc-grade{font-size:8px;margin-top:3px;padding:1px 4px;border-radius:3px;display:inline-block}
-.role-slots{padding:6px 6px 0;display:grid;grid-template-columns:1fr;gap:5px;border-bottom:1px solid rgba(0,0,0,.08);margin-bottom:4px}
+.role-slots{padding:6px 6px 0;display:grid;grid-template-columns:1fr 1fr;gap:5px;border-bottom:1px solid rgba(0,0,0,.08);margin-bottom:4px}
 .role-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 5px;text-align:center;display:flex;flex-direction:column;align-items:center}
 .role-card.empty{border-style:dashed;color:var(--muted);font-size:10px;justify-content:center;min-height:40px}
 .role-av{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;overflow:hidden;margin:0 auto 6px}
@@ -297,7 +297,8 @@ function render(data, nouveaux=[]){
   const tamponIdx = 5;
   const rolesActifs = teamRoles.slice(0,4).reduce((n,r)=>{if(r.chef&&r.chef.nom)n++;if(r.adjoint&&r.adjoint.nom)n++;return n;},0);
   const supActif = (supervisor&&supervisor.nom)?1:0;
-  document.getElementById('total-actifs').textContent = members.filter(m=>m.team!==dispoIdx&&m.team!==tamponIdx).length + rolesActifs + supActif;
+  const chefKey = chefBureau&&chefBureau.nom ? (chefBureau.nom+'|'+(chefBureau.prenom||'')) : null;
+  document.getElementById('total-actifs').textContent = members.filter(m=>m.team!==dispoIdx&&m.team!==tamponIdx&&!(chefKey&&(m.nom||'')+'|'+(m.prenom||'')===chefKey)).length + rolesActifs + supActif;
   document.getElementById('total-dispo').textContent = members.filter(m=>m.team===dispoIdx).length;
   document.getElementById('total-nouveaux').textContent = nouveaux.length;
 
