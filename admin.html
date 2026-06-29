@@ -181,6 +181,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <button class="btn primary" onclick="openAdd(0)">+ Ajouter agent</button>
     <button class="btn" onclick="exportJSON()">⬇ Exporter JSON</button>
     <button class="btn" onclick="document.getElementById('import-json-btn').click()">📂 Importer JSON</button>
+    <button class="btn" id="undo-btn" onclick="undoLast()" disabled style="opacity:.4;cursor:not-allowed">↩ Annuler</button>
     <input type="file" id="import-json-btn" accept=".json" style="display:none" onchange="importJSON(event)">
     <div style="flex:1"></div>
     <div style="position:relative;display:flex;align-items:center">
@@ -351,6 +352,7 @@ const GBG={"Colonel":"#DBEAFE","Lieutenant-colonel":"#DBEAFE","Commandant":"#DBE
 const GTX={"Colonel":"#1E3A8A","Lieutenant-colonel":"#1E3A8A","Commandant":"#1E3A8A","Capitaine":"#1E3A8A","Lieutenant":"#1E3A8A","Sous-lieutenant":"#1E3A8A","Adjudant-chef":"#14532D","Adjudant":"#14532D","Sergent-chef":"#14532D","Sergent":"#14532D","Caporal-chef":"#78350F","Caporal":"#78350F","Sapeur 1ere classe":"#881337","Sapeur 2eme classe":"#881337"};
 
 let _undoSnapshot=null;
+function saveUndoSnapshot(){_undoSnapshot={members:members.map(m=>({...m})),teamRoles:JSON.parse(JSON.stringify(teamRoles))};}
 let members=[], supervisor={nom:'',prenom:'',grade:'Commandant',fonction:'Chef de centre',photo:null};
 let chefBureau={nom:'',prenom:'',grade:'Commandant',fonction:'Chef de bureau',photo:null};
 const emptyRole=()=>({nom:'',prenom:'',grade:'Adjudant',photo:null});
@@ -378,6 +380,9 @@ async function loadFromFirebase(){
       if(data.supervisor) supervisor=data.supervisor;
       if(data.chefBureau) chefBureau=data.chefBureau;
       if(data.teamRoles) teamRoles=data.teamRoles;
+      // Nettoyage : retirer des members ceux qui sont déjà chef/adjoint dans teamRoles
+      const roleNames=new Set(teamRoles.flatMap(r=>[r.chef,r.adjoint]).filter(r=>r&&r.nom).map(r=>r.nom+'|'+r.prenom));
+      members=members.filter(m=>!roleNames.has((m.nom||'')+'|'+(m.prenom||'')));
       if(data.lastmod){const el=document.getElementById('last-modified');if(el)el.textContent=data.lastmod;}
     }
     await loadNouveaux();
@@ -394,17 +399,34 @@ async function loadFromFirebase(){
   }
 }
 
+let _dernierNbNouveaux=null;
 async function loadNouveaux(){
   try{
-    const res=await fetch(DB+'/organigramme/nouveaux.json');
+    const res=await fetch(DB+'/organigramme/nouveaux.json',{cache:'no-store'});
     const data=await res.json();
     if(data && typeof data==='object'){
       nouveaux=Object.entries(data).map(([fbKey,v])=>({...v,_fbKey:fbKey}));
     } else {
       nouveaux=[];
     }
+    if(_dernierNbNouveaux!==null && nouveaux.length>_dernierNbNouveaux){
+      const n=nouveaux.length-_dernierNbNouveaux;
+      notifierNouveau(n);
+    }
+    _dernierNbNouveaux=nouveaux.length;
     renderNouveaux();
   }catch(e){nouveaux=[];renderNouveaux();}
+}
+function notifierNouveau(n){
+  // Bannière visuelle
+  let b=document.getElementById('notif-nouveau');
+  if(!b){b=document.createElement('div');b.id='notif-nouveau';b.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#166534;color:#fff;padding:12px 24px;border-radius:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);font-size:14px;font-weight:600;display:flex;align-items:center;gap:12px;cursor:pointer';b.onclick=()=>b.remove();document.body.appendChild(b);}
+  b.innerHTML=`🔔 ${n} nouveau${n>1?'x':''} inscrit${n>1?'s':''}  <span style="font-size:18px;line-height:1">✕</span>`;
+  b.style.display='flex';
+  clearTimeout(b._t);b._t=setTimeout(()=>b.remove(),10000);
+  // Notification navigateur si permission accordée
+  if(Notification.permission==='granted'){new Notification('SPV Vannes',{body:`${n} nouveau${n>1?'x':''} inscrit${n>1?'s':''}`,icon:'icons/icon-192.png'});}
+  else if(Notification.permission!=='denied'){Notification.requestPermission().then(p=>{if(p==='granted')new Notification('SPV Vannes',{body:`${n} nouveau${n>1?'x':''} inscrit${n>1?'s':''}`,icon:'icons/icon-192.png'});});}
 }
 
 async function saveToFirebase(){
@@ -623,8 +645,8 @@ function openRole(ti,type){
   else{p.style.display='none';document.getElementById('role-photo-hint').style.display='';}
   document.getElementById('modal-role').classList.add('open');
 }
-function saveRole(){const{ti,type}=roleTarget;teamRoles[ti][type]={nom:document.getElementById('role-nom').value.trim().toUpperCase(),prenom:document.getElementById('role-prenom').value.trim(),grade:document.getElementById('role-grade').value,photo:rolePhoto||null};document.getElementById('modal-role').classList.remove('open');persist();render();}
-function clearRole(){const{ti,type}=roleTarget;teamRoles[ti][type]=emptyRole();document.getElementById('modal-role').classList.remove('open');persist();render();}
+function saveRole(){saveUndoSnapshot();const{ti,type}=roleTarget;teamRoles[ti][type]={nom:document.getElementById('role-nom').value.trim().toUpperCase(),prenom:document.getElementById('role-prenom').value.trim(),grade:document.getElementById('role-grade').value,photo:rolePhoto||null};document.getElementById('modal-role').classList.remove('open');persist();render();showUndo();}
+function clearRole(){saveUndoSnapshot();const{ti,type}=roleTarget;teamRoles[ti][type]=emptyRole();document.getElementById('modal-role').classList.remove('open');persist();render();showUndo();}
 function handleRolePhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{rolePhoto=ev.target.result;const p=document.getElementById('role-photo-preview');p.src=rolePhoto;p.style.display='block';document.getElementById('role-photo-hint').style.display='none';};r.readAsDataURL(f);}
 
 // ===================== DRAG & DROP =====================
@@ -664,7 +686,7 @@ function dragEnd(){
       const colEl=roleEl.closest('[id^="team-"]');
       const ti=colEl?parseInt(colEl.id.split('-')[1]):-1;
       const m=members.find(x=>x.id===id);
-      if(m&&ti>=0){teamRoles[ti][type]={nom:m.nom,prenom:m.prenom,grade:m.grade,photo:m.photo||null};persist();render();}
+      if(m&&ti>=0){teamRoles[ti][type]={nom:m.nom,prenom:m.prenom,grade:m.grade,photo:m.photo||null};members=members.filter(x=>x.id!==id);persist();render();}
     }
   }
   draggingId=null;
@@ -693,13 +715,13 @@ function drop(e,ti){
     const[,srcTi,type]=id.split(':');
     const r=teamRoles[parseInt(srcTi)][type];
     if(!r.nom)return;
-    _undoSnapshot=members.map(m=>({...m}));
+    saveUndoSnapshot();
     members.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),nom:r.nom,prenom:r.prenom,grade:r.grade,photo:r.photo||null,team:ti});
     teamRoles[parseInt(srcTi)][type]=emptyRole();
-    persist();render();if(ti===5)showUndo();
+    persist();render();showUndo();
     return;
   }
-  const m=members.find(x=>x.id===id);if(m&&m.team!==ti){m.team=ti;persist();render();}
+  const m=members.find(x=>x.id===id);if(m&&m.team!==ti){saveUndoSnapshot();m.team=ti;persist();render();showUndo();}
 }
 
 // ===================== AGENTS CRUD =====================
@@ -708,13 +730,13 @@ function openEdit(id){const m=members.find(x=>x.id===id);if(!m)return;editId=id;
 function closeModal(){document.getElementById('modal').classList.remove('open');}
 function handlePhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{curPhoto=ev.target.result;const p=document.getElementById('photo-preview');p.src=curPhoto;p.style.display='block';document.getElementById('photo-hint').style.display='none';};r.readAsDataURL(f);}
 function save(){const nom=document.getElementById('f-nom').value.trim().toUpperCase();const prenom=document.getElementById('f-prenom').value.trim();if(!nom||!prenom){alert('NOM et Prénom obligatoires');return;}const d={id:editId||Date.now().toString(36)+Math.random().toString(36).slice(2,5),nom,prenom,grade:document.getElementById('f-grade').value,team:parseInt(document.getElementById('f-team').value),photo:curPhoto||null};if(editId){const i=members.findIndex(x=>x.id===editId);if(i>=0)members[i]=d;}else members.push(d);closeModal();persist();render();}
-function del(id){if(confirm('Supprimer cet agent ?')){members=members.filter(m=>m.id!==id);persist();render();}}
+function del(id){if(confirm('Supprimer cet agent ?')){saveUndoSnapshot();members=members.filter(m=>m.id!==id);persist();render();showUndo();}}
 function deleteCurrent(){if(editId){del(editId);closeModal();}}
 function videColonne(ti){members.filter(m=>m.team===ti).forEach(m=>m.team=4);persist();render();}
-function viderVersTampon(ti){if(!confirm('Vider l\'équipe vers le Tampon ?'))return;_undoSnapshot=members.map(m=>({...m}));members.filter(m=>m.team===ti).forEach(m=>m.team=5);persist();render();showUndo();}
-function undoLast(){if(!_undoSnapshot)return;members=_undoSnapshot;_undoSnapshot=null;persist();render();hideUndo();}
-function showUndo(){let b=document.getElementById('undo-bar');if(!b){b=document.createElement('div');b.id='undo-bar';b.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1E293B;color:#fff;padding:10px 20px;border-radius:10px;display:flex;align-items:center;gap:12px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:14px';b.innerHTML='Action effectuée <button onclick="undoLast()" style="background:#F97316;border:none;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:600">↩ Annuler</button><button onclick="hideUndo()" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:18px">✕</button>';document.body.appendChild(b);}b.style.display='flex';clearTimeout(b._t);b._t=setTimeout(hideUndo,8000);}
-function hideUndo(){const b=document.getElementById('undo-bar');if(b)b.style.display='none';}
+function viderVersTampon(ti){if(!confirm('Vider l\'équipe vers le Tampon ?'))return;saveUndoSnapshot();members.filter(m=>m.team===ti).forEach(m=>m.team=5);persist();render();showUndo();}
+function undoLast(){if(!_undoSnapshot)return;members=_undoSnapshot.members||_undoSnapshot;teamRoles=_undoSnapshot.teamRoles||teamRoles;_undoSnapshot=null;persist();render();hideUndo();}
+function showUndo(){const btn=document.getElementById('undo-btn');if(btn){btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer';}}
+function hideUndo(){const btn=document.getElementById('undo-btn');if(btn){btn.disabled=true;btn.style.opacity='.4';btn.style.cursor='not-allowed';}}
 
 // ===================== RECHERCHE =====================
 function filterCards(q){
