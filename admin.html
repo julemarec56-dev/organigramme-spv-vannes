@@ -464,7 +464,9 @@ function render(){
   renderChef();renderSup();
   const dispoIdx=4;
   const tamponIdx=5;
-  document.getElementById('total-actifs').textContent=members.filter(m=>m.team!==dispoIdx&&m.team!==tamponIdx).length;
+  const rolesActifs=teamRoles.slice(0,4).reduce((n,r)=>{if(r.chef&&r.chef.nom)n++;if(r.adjoint&&r.adjoint.nom)n++;return n;},0);
+  const supActif=(supervisor&&supervisor.nom)?1:0;
+  document.getElementById('total-actifs').textContent=members.filter(m=>m.team!==dispoIdx&&m.team!==tamponIdx).length+rolesActifs+supActif;
   document.getElementById('total-dispo').textContent=members.filter(m=>m.team===dispoIdx).length;
   document.getElementById('total-nouveaux').textContent=nouveaux.length;
   const nouveauxCol = (()=>{
@@ -541,7 +543,7 @@ function render(){
       </div>`).join('');
     const roles=`<div class="role-slots">${roleCardHTML(teamRoles[ti]?.chef,ti,'chef',t.color,t.bg)}${roleCardHTML(teamRoles[ti]?.adjoint,ti,'adjoint',t.color,t.bg)}</div>`;
     return`<div class="team-col" id="team-${ti}" style="background:${t.light};--drop-color:${t.color}" ondragover="dragOver(event,${ti})" ondragleave="dragLeave(event,${ti})" ondrop="drop(event,${ti})">
-      <div class="team-total-banner" style="background:${t.bg};color:${t.color}">${list.length}<div class="team-total-label">agent${list.length>1?'s':''}</div></div>
+      ${(()=>{const r=teamRoles[ti]||{};const extra=(r.chef&&r.chef.nom?1:0)+(r.adjoint&&r.adjoint.nom?1:0);const total=list.length+extra;return`<div class="team-total-banner" style="background:${t.bg};color:${t.color}">${total}<div class="team-total-label">agent${total>1?'s':''}</div></div>`;})()}
       <div class="team-header">
         <div class="team-dot" style="background:${t.color}"></div>
         <span class="team-name" style="color:${t.color}">${t.name}</span>
