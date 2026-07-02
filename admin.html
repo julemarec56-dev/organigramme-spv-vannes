@@ -373,7 +373,7 @@ function showSync(msg,isError=false){
 
 async function loadFromFirebase(){
   try{
-    const res=await fetch(DB+'/organigramme.json');
+    const res=await fetch(DB+'/organigramme.json',{cache:'no-store'});
     const data=await res.json();
     if(data){
       if(data.members) members=data.members;
