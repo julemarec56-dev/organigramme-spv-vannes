@@ -664,7 +664,8 @@ function render(){
         <div class="team-dot" style="background:#166534"></div>
         <span class="team-name" style="color:#166534">Nouveaux</span>
       </div>
-      <div class="team-members">${cards||`<div class="team-empty">Aucun nouveau</div>`}</div>
+      <div class="team-members" ondragover="event.preventDefault()" ondrop="dropToNouveaux(event)">${cards||`<div class="team-empty" ondragover="event.preventDefault()" ondrop="dropToNouveaux(event)">Glisser ici</div>`}</div>
+      <div class="drop-hint" style="display:none">⬇ Remettre en Nouveaux</div>
     </div>`;
   })();
   // Colonne Disponibilité séparée (index 4)
