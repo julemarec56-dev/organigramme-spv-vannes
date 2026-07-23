@@ -646,7 +646,9 @@ function render(){
   const nouveauxCol = (()=>{
     const n=nouveaux.length;
     const cards=nouveaux.map(m=>`
-      <div class="member-card" onclick="integrerNouveau('${m._fbKey}')" title="Cliquer pour intégrer dans une équipe">
+      <div class="member-card" draggable="true"
+        ondragstart="dragStartNouveau(event,'${m._fbKey}')" ondragend="dragEnd(event)"
+        onclick="integrerNouveau('${m._fbKey}')" title="Glisser vers une équipe ou cliquer">
         <div class="mc-new-badge">NOUVEAU</div>
         <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
           ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
@@ -825,6 +827,19 @@ function roleCardDragStart(e,ti,type){
   document.getElementById('ghost').style.display='block';
   e.dataTransfer.setDragImage(document.getElementById('ghost'),42,42);
 }
+function dragStartNouveau(e,fbKey){
+  const n=nouveaux.find(x=>x._fbKey===fbKey);if(!n)return;
+  draggingId='nouveau:'+fbKey;
+  e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','nouveau:'+fbKey);
+  const gav=document.getElementById('ghost-av');
+  if(n.photo){gav.innerHTML=`<img src="${n.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover">`;}
+  else{gav.textContent=ini(n.prenom,n.nom);gav.style.background=GBG[n.grade]||'#ddd';gav.style.color=GTX[n.grade]||'#333';}
+  document.getElementById('ghost-nom').textContent=(n.nom||'').toUpperCase();
+  const gg=document.getElementById('ghost-grade');gg.textContent=n.grade;gg.style.background=GBG[n.grade]||'#eee';gg.style.color=GTX[n.grade]||'#333';
+  document.getElementById('ghost').style.display='block';
+  e.dataTransfer.setDragImage(document.getElementById('ghost'),42,42);
+}
+
 function dragStart(e,id){
   draggingId=id;const m=members.find(x=>x.id===id);
   e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);
@@ -882,6 +897,14 @@ function drop(e,ti){
     teamRoles[parseInt(srcTi)][type]=emptyRole();
     persist();render();showUndo();
     return;
+  }
+  if(id.startsWith('nouveau:')){
+    const fbKey=id.split(':')[1];
+    const n=nouveaux.find(x=>x._fbKey===fbKey);if(!n)return;
+    saveUndoSnapshot();
+    members.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),nom:n.nom,prenom:n.prenom,grade:n.grade,photo:n.photo||null,team:ti});
+    deleteNouveau(fbKey).then(()=>{saveToFirebase();render();});
+    showUndo();return;
   }
   const m=members.find(x=>x.id===id);if(m&&m.team!==ti){saveUndoSnapshot();m.team=ti;persist();render();showUndo();}
 }
