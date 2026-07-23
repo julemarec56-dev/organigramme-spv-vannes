@@ -146,9 +146,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .fiche-bg-right{position:absolute;top:0;right:0;bottom:0;width:55%;clip-path:polygon(28% 0%,100% 0%,100% 100%,0% 100%);transition:background .3s}
 .fiche-content{position:relative;z-index:2;height:100%;display:flex;align-items:stretch;padding:0 32px 0 40px}
 .fiche-left{display:flex;flex-direction:column;justify-content:space-between;flex:1;min-width:0;padding:26px 0 22px}
-.fiche-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;font-weight:700;font-family:'Segoe UI',system-ui,sans-serif;transition:color .3s}
-.fiche-nom{font-size:36px;font-weight:700;color:#1a1a1a;letter-spacing:.5px;font-family:'Segoe UI',system-ui,sans-serif;line-height:1;word-break:break-word;margin-top:4px}
-.fiche-prenom{font-size:24px;color:#333;font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:.3px;font-weight:400;margin-top:2px}
+.fiche-label{font-size:15px;letter-spacing:3px;text-transform:uppercase;font-weight:700;font-family:'Segoe UI',system-ui,sans-serif;transition:color .3s}
+.fiche-nom{font-size:36px;font-weight:700;color:#1a1a1a;letter-spacing:.5px;font-family:'Segoe UI',system-ui,sans-serif;line-height:1;word-break:break-word;margin-top:0}
+.fiche-prenom{font-size:24px;color:#333;font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:.3px;font-weight:400;margin-top:0;line-height:1.1}
 .fiche-divider{width:36px;height:3px;border-radius:2px;transition:background .3s;margin-top:10px}
 .fiche-org{font-size:9px;letter-spacing:2.5px;color:#aaa;text-transform:uppercase;font-family:'Segoe UI',system-ui,sans-serif}
 .fiche-right{width:180px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -327,8 +327,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="fiche-content">
       <div class="fiche-left">
         <div class="fiche-label" id="fiche-label">Nouveau SPV</div>
-        <div class="fiche-nom" id="fiche-nom">NOM</div>
-        <div class="fiche-prenom" id="fiche-prenom">Prénom</div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div class="fiche-nom" id="fiche-nom">NOM</div>
+          <div class="fiche-prenom" id="fiche-prenom">Prénom</div>
+        </div>
         <div class="fiche-divider" id="fiche-divider"></div>
         <div class="fiche-org">CSP Vannes · SDIS 56</div>
       </div>
