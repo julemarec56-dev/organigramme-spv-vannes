@@ -658,14 +658,13 @@ function render(){
         <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
         <button class="mc-del" onclick="event.stopPropagation();supprimerNouveau('${m._fbKey}')">✕</button>
       </div>`).join('');
-    return`<div class="team-col" style="background:#F0FDF4;border:2px dashed #166534" ondragover="event.preventDefault();this.style.borderColor='#15803D'" ondragleave="this.style.borderColor='#166534'" ondrop="dropToNouveaux(event);this.style.borderColor='#166534'">
-      <div class="team-total-banner" style="background:#DCFCE7;color:#166534">${n}<div class="team-total-label">nouveau${n>1?'x':''}</div></div>
-      <div class="team-header">
-        <div class="team-dot" style="background:#166534"></div>
-        <span class="team-name" style="color:#166534">Nouveaux</span>
+    return`<div class="team-col" data-droptarget="nouveaux" style="background:#F0FDF4;border:2px dashed #166534" ondragover="event.preventDefault();mouseX=event.clientX;mouseY=event.clientY;this.style.borderColor='#15803D'" ondragleave="this.style.borderColor='#166534'">
+      <div class="team-total-banner" data-droptarget="nouveaux" style="background:#DCFCE7;color:#166534">${n}<div class="team-total-label" data-droptarget="nouveaux">nouveau${n>1?'x':''}</div></div>
+      <div class="team-header" data-droptarget="nouveaux">
+        <div class="team-dot" data-droptarget="nouveaux" style="background:#166534"></div>
+        <span class="team-name" data-droptarget="nouveaux" style="color:#166534">Nouveaux</span>
       </div>
-      <div class="team-members" ondragover="event.preventDefault()" ondrop="dropToNouveaux(event)">${cards||`<div class="team-empty" ondragover="event.preventDefault()" ondrop="dropToNouveaux(event)">Glisser ici</div>`}</div>
-      <div class="drop-hint" style="display:none">⬇ Remettre en Nouveaux</div>
+      <div class="team-members" data-droptarget="nouveaux">${cards||`<div class="team-empty" data-droptarget="nouveaux">Glisser ici pour remettre en Nouveaux</div>`}</div>
     </div>`;
   })();
   // Colonne Disponibilité séparée (index 4)
@@ -874,9 +873,25 @@ function dragStart(e,id){
 }
 function dragEnd(){
   const id=draggingId;
-  if(id){
+  if(id&&!id.startsWith('nouveau:')){
     const el=document.getElementById('mc-'+id);if(el)el.classList.remove('dragging');
     const els=document.elementsFromPoint(mouseX,mouseY);
+
+    // Détection colonne Nouveaux
+    const nouveauxCol=els.find(el=>el.dataset&&el.dataset.droptarget==='nouveaux');
+    if(nouveauxCol){
+      const m=members.find(x=>x.id===id);
+      if(m){
+        saveUndoSnapshot();
+        fetch(DB+'/organigramme/nouveaux.json'+DB_AUTH,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nom:m.nom,prenom:m.prenom,grade:m.grade,photo:m.photo||null})})
+          .then(()=>{members=members.filter(x=>x.id!==id);saveToFirebase();loadNouveaux().then(()=>render());showUndo();});
+      }
+      draggingId=null;document.getElementById('ghost').style.display='none';
+      document.querySelectorAll('.team-col').forEach(c=>c.classList.remove('drag-over'));
+      return;
+    }
+
+    // Détection slot rôle
     const roleEl=els.find(el=>el.dataset&&el.dataset.role);
     if(roleEl){
       const type=roleEl.dataset.role;
