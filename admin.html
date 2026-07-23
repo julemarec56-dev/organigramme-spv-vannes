@@ -458,6 +458,7 @@ function checkPw(){
 <script>
 // ===================== CONFIG =====================
 const DB = 'https://orgamme-spv-vannes-default-rtdb.europe-west1.firebasedatabase.app';
+const DB_AUTH = '?auth=WYuaPlJ6a6l51hmrVOoIBSo5bJlz6YGvVdrexhFc';
 
 // ===================== DONNÉES =====================
 const TEAMS=[
@@ -568,7 +569,7 @@ async function saveToFirebase(){
   localStorage.setItem('pv-chef',JSON.stringify(chefBureau));
   localStorage.setItem('pv-roles',JSON.stringify(teamRoles));
   try{
-    const res=await fetch(DB+'/organigramme.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const res=await fetch(DB+'/organigramme.json'+DB_AUTH,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     if(!res.ok) throw new Error();
     showSync('✓ Synchronisé');
   }catch(e){showSyncError('⚠ Firebase inaccessible — données sauvegardées localement uniquement. Cliquez pour fermer.');}
@@ -576,7 +577,7 @@ async function saveToFirebase(){
 
 async function deleteNouveau(fbKey){
   try{
-    await fetch(DB+'/organigramme/nouveaux/'+fbKey+'.json',{method:'DELETE'});
+    await fetch(DB+'/organigramme/nouveaux/'+fbKey+'.json'+DB_AUTH,{method:'DELETE'});
     await loadNouveaux();
   }catch(e){}
 }
