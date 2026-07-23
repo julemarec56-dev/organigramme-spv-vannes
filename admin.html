@@ -313,6 +313,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   </div>
   <div class="modal-actions">
     <button class="btn danger" onclick="clearRole()" style="margin-right:auto">🗑 Retirer</button>
+    <button class="btn" onclick="openFicheRole()" style="background:#DBEAFE;color:#1E4D9B;border-color:#BFDBFE">📷 Fiche</button>
     <button class="btn" onclick="document.getElementById('modal-role').classList.remove('open')">Annuler</button>
     <button class="btn primary" onclick="saveRole()">✔ Enregistrer</button>
   </div>
@@ -876,6 +877,23 @@ const FICHE_MODES=[
   {id:'eq3',label:'Équipe 4',color:'#881337',ring:'conic-gradient(from 0deg,#4c0519,#881337,#FCA5A5,#881337,#4c0519)'},
 ];
 let _ficheMode=0;
+
+function openFicheRole(){
+  const nom=document.getElementById('role-nom').value.trim().toUpperCase();
+  const prenom=document.getElementById('role-prenom').value.trim();
+  if(!nom&&!prenom){alert('Renseignez le NOM et le prénom d\'abord.');return;}
+  const photo=rolePhoto||null;
+  document.getElementById('fiche-nom').textContent=nom||'NOM';
+  document.getElementById('fiche-prenom').textContent=prenom||'Prénom';
+  const av=document.getElementById('fiche-av');
+  if(photo){av.innerHTML=`<img src="${photo}" alt="${nom}">`;}
+  else{av.textContent=((nom[0]||''))+(prenom?(prenom[0]||''):'');}
+  // Détecter l'équipe selon roleTarget
+  const ti=roleTarget?roleTarget.ti:-1;
+  _ficheMode=ti>=0&&ti<=3?ti+1:0;
+  renderFicheOptions();applyFicheMode();
+  document.getElementById('modal-fiche').classList.add('open');
+}
 
 function openFiche(id){
   const m=members.find(x=>x.id===id);if(!m)return;
