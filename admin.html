@@ -363,6 +363,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   </div>
   <div class="modal-actions">
     <button class="btn" onclick="document.getElementById('modal-integrer').classList.remove('open')">Annuler</button>
+    <button class="btn" onclick="openFicheNouveau()" style="background:#DBEAFE;color:#1E4D9B;border-color:#BFDBFE">📷 Fiche</button>
     <button class="btn primary" onclick="integrerNouveauConfirm()">✔ Affecter</button>
   </div>
 </div></div>
@@ -878,17 +879,31 @@ const FICHE_MODES=[
 ];
 let _ficheMode=0;
 
+function openFicheNouveau(){
+  const fbKey=document.getElementById('modal-integrer').dataset.fbkey;
+  const n=nouveaux.find(x=>x._fbKey===fbKey);if(!n)return;
+  document.getElementById('modal-integrer').classList.remove('open');
+  document.getElementById('fiche-nom').textContent=(n.nom||'').toUpperCase();
+  document.getElementById('fiche-prenom').textContent=n.prenom||'';
+  const av=document.getElementById('fiche-av');
+  if(n.photo){av.innerHTML=`<img src="${n.photo}" alt="${n.nom}">`;}
+  else{av.textContent=ini(n.prenom,n.nom);}
+  _ficheMode=0; // Nouveau SPV par défaut
+  renderFicheOptions();applyFicheMode();
+  document.getElementById('modal-fiche').classList.add('open');
+}
+
 function openFicheRole(){
   const nom=document.getElementById('role-nom').value.trim().toUpperCase();
   const prenom=document.getElementById('role-prenom').value.trim();
   if(!nom&&!prenom){alert('Renseignez le NOM et le prénom d\'abord.');return;}
+  document.getElementById('modal-role').classList.remove('open');
   const photo=rolePhoto||null;
   document.getElementById('fiche-nom').textContent=nom||'NOM';
   document.getElementById('fiche-prenom').textContent=prenom||'Prénom';
   const av=document.getElementById('fiche-av');
   if(photo){av.innerHTML=`<img src="${photo}" alt="${nom}">`;}
-  else{av.textContent=((nom[0]||''))+(prenom?(prenom[0]||''):'');}
-  // Détecter l'équipe selon roleTarget
+  else{av.textContent=(nom[0]||'')+(prenom[0]||'');}
   const ti=roleTarget?roleTarget.ti:-1;
   _ficheMode=ti>=0&&ti<=3?ti+1:0;
   renderFicheOptions();applyFicheMode();
