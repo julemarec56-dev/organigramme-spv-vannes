@@ -134,6 +134,40 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .search-hidden{display:none!important}
 .search-match{outline:2px solid #1E4D9B;outline-offset:1px}
 
+/* FICHE PRÉSENTATION */
+.mc-fiche-btn{position:absolute;bottom:3px;right:3px;width:16px;height:16px;border:none;border-radius:4px;background:#DBEAFE;color:#1E4D9B;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;line-height:1}
+.member-card:hover .mc-fiche-btn{opacity:1}
+
+#modal-fiche{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+#modal-fiche.open{display:flex}
+
+#fiche-card{width:500px;height:300px;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 32px 80px rgba(0,0,0,0.7);flex-shrink:0}
+.fiche-bg-left{position:absolute;inset:0;background:#F8F4EF}
+.fiche-bg-right{position:absolute;top:0;right:0;bottom:0;width:55%;clip-path:polygon(28% 0%,100% 0%,100% 100%,0% 100%);transition:background .3s}
+.fiche-content{position:relative;z-index:2;height:100%;display:flex;align-items:center;padding:0 36px}
+.fiche-left{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0}
+.fiche-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:600;font-family:'Segoe UI',system-ui,sans-serif;transition:color .3s}
+.fiche-nom{font-size:32px;font-weight:600;color:#1a1a1a;letter-spacing:1px;font-family:'Segoe UI',system-ui,sans-serif;line-height:1;word-break:break-word}
+.fiche-prenom{font-size:17px;color:#888;font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:0.5px}
+.fiche-divider{width:32px;height:3px;border-radius:2px;transition:background .3s}
+.fiche-org{font-size:9px;letter-spacing:2px;color:#aaa;text-transform:uppercase;font-family:'Segoe UI',system-ui,sans-serif}
+.fiche-right{width:160px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fiche-avatar-ring{width:130px;height:130px;border-radius:50%;padding:3px;transition:background .3s}
+.fiche-avatar{width:124px;height:124px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:500;color:#fff;font-family:'Segoe UI',system-ui,sans-serif;border:3px solid rgba(255,255,255,0.2);overflow:hidden}
+.fiche-avatar img{width:124px;height:124px;object-fit:cover;border-radius:50%}
+
+#fiche-options{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.fiche-opt{display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:20px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.6);font-size:12px;font-family:'Segoe UI',system-ui,sans-serif;cursor:pointer;transition:all .2s;user-select:none}
+.fiche-opt:hover{background:rgba(255,255,255,0.12);color:#fff}
+.fiche-opt.selected{background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.5);color:#fff;font-weight:500}
+.fiche-opt-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+#fiche-actions{display:flex;gap:12px}
+#btn-fiche-dl{padding:11px 28px;background:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;color:#1a1a1a;cursor:pointer;font-family:'Segoe UI',system-ui,sans-serif;transition:opacity .2s;display:flex;align-items:center;gap:8px}
+#btn-fiche-dl:hover{opacity:0.85}
+#btn-fiche-close{padding:11px 20px;background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.2);border-radius:10px;font-size:13px;color:rgba(255,255,255,0.6);cursor:pointer;font-family:'Segoe UI',system-ui,sans-serif}
+#btn-fiche-close:hover{background:rgba(255,255,255,0.14);color:#fff}
+
 /* PRINT */
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
@@ -284,6 +318,54 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   </div>
 </div></div>
 
+<!-- MODAL FICHE PRÉSENTATION -->
+<div id="modal-fiche">
+  <div id="fiche-card">
+    <div class="fiche-bg-left"></div>
+    <div class="fiche-bg-right" id="fiche-right-bg"></div>
+    <div class="fiche-content">
+      <div class="fiche-left">
+        <div class="fiche-label" id="fiche-label">Nouveau SPV</div>
+        <div class="fiche-nom" id="fiche-nom">NOM</div>
+        <div class="fiche-prenom" id="fiche-prenom">Prénom</div>
+        <div class="fiche-divider" id="fiche-divider"></div>
+        <div class="fiche-org">CSP Vannes · SDIS 56</div>
+      </div>
+      <div class="fiche-right">
+        <div class="fiche-avatar-ring" id="fiche-ring">
+          <div class="fiche-avatar" id="fiche-av">?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="fiche-options"></div>
+  <div id="fiche-actions">
+    <button id="btn-fiche-close" onclick="closeFiche()">✕ Fermer</button>
+    <button id="btn-fiche-dl" onclick="ficheTelecharger()">⬇ Télécharger PNG</button>
+  </div>
+</div>
+
+<!-- MODAL INTEGRER NOUVEAU -->
+<div class="modal-bg" id="modal-integrer">
+<div class="modal">
+  <h3>Intégrer un nouveau</h3>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">Agent : <strong id="integrer-nom"></strong></p>
+  <div class="field">
+    <label>Affecter dans</label>
+    <select id="integrer-team">
+      <option value="0">Équipe 1</option>
+      <option value="1">Équipe 2</option>
+      <option value="2">Équipe 3</option>
+      <option value="3">Équipe 4</option>
+      <option value="4">Disponibilité</option>
+    </select>
+  </div>
+  <div class="modal-actions">
+    <button class="btn" onclick="document.getElementById('modal-integrer').classList.remove('open')">Annuler</button>
+    <button class="btn primary" onclick="integrerNouveauConfirm()">✔ Affecter</button>
+  </div>
+</div></div>
+
 <!-- MODAL CHEF DE BUREAU -->
 <div class="modal-bg" id="modal-chef">
 <div class="modal">
@@ -367,8 +449,15 @@ setInterval(()=>{loadNouveaux();},30000);
 function showSync(msg,isError=false){
   const el=document.getElementById('sync-status');
   el.textContent=msg;el.classList.toggle('error',isError);
-  el.classList.add('show');
+  el.classList.add('show');el.style.cursor='default';el.onclick=null;
   clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3000);
+}
+function showSyncError(msg){
+  const el=document.getElementById('sync-status');
+  el.textContent=msg;el.classList.add('error','show');
+  el.style.cursor='pointer';
+  clearTimeout(el._t);
+  el.onclick=()=>{el.classList.remove('show');el.onclick=null;};
 }
 
 async function loadFromFirebase(){
@@ -443,7 +532,7 @@ async function saveToFirebase(){
     const res=await fetch(DB+'/organigramme.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     if(!res.ok) throw new Error();
     showSync('✓ Synchronisé');
-  }catch(e){showSync('⚠ Sauvegardé localement',true);}
+  }catch(e){showSyncError('⚠ Firebase inaccessible — données sauvegardées localement uniquement. Cliquez pour fermer.');}
 }
 
 async function deleteNouveau(fbKey){
@@ -520,6 +609,7 @@ function render(){
   const dispoCards=dispoList.map(m=>`
     <div class="member-card" id="mc-${m.id}" draggable="true" ondragstart="dragStart(event,'${m.id}')" ondragend="dragEnd(event)" onclick="openEdit('${m.id}')">
       <button class="mc-del" onclick="event.stopPropagation();del('${m.id}')">✕</button>
+      <button class="mc-fiche-btn" onclick="event.stopPropagation();openFiche('${m.id}')" title="Fiche présentation">▣</button>
       <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
         ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
       </div>
@@ -539,6 +629,7 @@ function render(){
   const tamponCards=tamponList.map(m=>`
     <div class="member-card" id="mc-${m.id}" draggable="true" ondragstart="dragStart(event,'${m.id}')" ondragend="dragEnd(event)" onclick="openEdit('${m.id}')">
       <button class="mc-del" onclick="event.stopPropagation();del('${m.id}')">✕</button>
+      <button class="mc-fiche-btn" onclick="event.stopPropagation();openFiche('${m.id}')" title="Fiche présentation">▣</button>
       <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
         ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
       </div>
@@ -557,6 +648,7 @@ function render(){
     const cards=list.map(m=>`
       <div class="member-card" id="mc-${m.id}" draggable="true" ondragstart="dragStart(event,'${m.id}')" ondragend="dragEnd(event)" onclick="openEdit('${m.id}')">
         <button class="mc-del" onclick="event.stopPropagation();del('${m.id}')">✕</button>
+        <button class="mc-fiche-btn" onclick="event.stopPropagation();openFiche('${m.id}')" title="Fiche présentation">▣</button>
         <div class="mc-avatar" style="background:${GBG[m.grade]||'#ddd'};color:${GTX[m.grade]||'#333'}">
           ${m.photo?`<img src="${m.photo}" alt="${m.nom}">`:`${ini(m.prenom,m.nom)}`}
         </div>
@@ -585,8 +677,16 @@ function renderNouveaux(){
 
 async function integrerNouveau(fbKey){
   const n=nouveaux.find(x=>x._fbKey===fbKey);if(!n)return;
-  const ti=parseInt(prompt('Dans quelle équipe intégrer '+n.prenom+' '+n.nom+'?\n0=Équipe 1, 1=Équipe 2, 2=Équipe 3, 3=Équipe 4, 4=Disponibilité','4'));
-  if(isNaN(ti)||ti<0||ti>4)return;
+  document.getElementById('integrer-nom').textContent=n.prenom+' '+n.nom;
+  document.getElementById('integrer-team').value='0';
+  document.getElementById('modal-integrer').classList.add('open');
+  document.getElementById('modal-integrer').dataset.fbkey=fbKey;
+}
+async function integrerNouveauConfirm(){
+  const fbKey=document.getElementById('modal-integrer').dataset.fbkey;
+  const n=nouveaux.find(x=>x._fbKey===fbKey);if(!n)return;
+  const ti=parseInt(document.getElementById('integrer-team').value);
+  document.getElementById('modal-integrer').classList.remove('open');
   const m={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),nom:n.nom,prenom:n.prenom,grade:n.grade,photo:n.photo||null,team:ti};
   members.push(m);
   await deleteNouveau(fbKey);
@@ -767,8 +867,74 @@ function importJSON(e){
     catch(err){alert('Fichier JSON invalide.');}
   };reader.readAsText(file);e.target.value='';
 }
+// ===================== FICHE PRÉSENTATION =====================
+const FICHE_MODES=[
+  {id:'nouveau',label:'Nouveau SPV',color:'#C41E3A',ring:'conic-gradient(from 0deg,#8B0000,#C41E3A,#FF6B6B,#C41E3A,#8B0000)'},
+  {id:'eq0',label:'Équipe 1',color:'#1E4D9B',ring:'conic-gradient(from 0deg,#0F2137,#1E4D9B,#60A5FA,#1E4D9B,#0F2137)'},
+  {id:'eq1',label:'Équipe 2',color:'#166534',ring:'conic-gradient(from 0deg,#052e16,#166534,#4ADE80,#166534,#052e16)'},
+  {id:'eq2',label:'Équipe 3',color:'#92400E',ring:'conic-gradient(from 0deg,#431407,#92400E,#FCD34D,#92400E,#431407)'},
+  {id:'eq3',label:'Équipe 4',color:'#881337',ring:'conic-gradient(from 0deg,#4c0519,#881337,#FCA5A5,#881337,#4c0519)'},
+];
+let _ficheMode=0;
+
+function openFiche(id){
+  const m=members.find(x=>x.id===id);if(!m)return;
+  // Détecter le mode selon l'équipe de l'agent
+  const teamMap={0:1,1:2,2:3,3:4};
+  _ficheMode=m.team>=0&&m.team<=3?m.team+1:0;
+  document.getElementById('fiche-nom').textContent=(m.nom||'').toUpperCase();
+  document.getElementById('fiche-prenom').textContent=m.prenom||'';
+  const av=document.getElementById('fiche-av');
+  if(m.photo){av.innerHTML=`<img src="${m.photo}" alt="${m.nom}">`;}
+  else{av.textContent=ini(m.prenom,m.nom);}
+  renderFicheOptions();
+  applyFicheMode();
+  document.getElementById('modal-fiche').classList.add('open');
+}
+
+function renderFicheOptions(){
+  document.getElementById('fiche-options').innerHTML=FICHE_MODES.map((mode,i)=>`
+    <div class="fiche-opt${i===_ficheMode?' selected':''}" onclick="selectFicheMode(${i})">
+      <div class="fiche-opt-dot" style="background:${mode.color}"></div>
+      ${mode.label}
+    </div>`).join('');
+}
+
+function selectFicheMode(i){_ficheMode=i;renderFicheOptions();applyFicheMode();}
+
+function applyFicheMode(){
+  const mode=FICHE_MODES[_ficheMode];
+  document.getElementById('fiche-right-bg').style.background=mode.color;
+  document.getElementById('fiche-label').textContent=mode.label;
+  document.getElementById('fiche-label').style.color=mode.color;
+  document.getElementById('fiche-divider').style.background=mode.color;
+  document.getElementById('fiche-ring').style.background=mode.ring;
+}
+
+function closeFiche(){document.getElementById('modal-fiche').classList.remove('open');}
+
+async function ficheTelecharger(){
+  const btn=document.getElementById('btn-fiche-dl');
+  btn.textContent='Génération…';btn.style.opacity='0.6';
+  try{
+    const canvas=await html2canvas(document.getElementById('fiche-card'),{
+      backgroundColor:null,scale:3,useCORS:true,logging:false,
+      onclone:doc=>{
+        doc.getElementById('fiche-right-bg').style.clipPath='polygon(28% 0%,100% 0%,100% 100%,0% 100%)';
+      }
+    });
+    const a=document.createElement('a');
+    const nom=document.getElementById('fiche-nom').textContent;
+    const prenom=document.getElementById('fiche-prenom').textContent;
+    a.download='SPV_'+nom+'_'+prenom+'.png';
+    a.href=canvas.toDataURL('image/png');a.click();
+  }catch(e){showSync('Erreur téléchargement',true);}
+  btn.innerHTML='⬇ Télécharger PNG';btn.style.opacity='1';
+}
+
 function exportImage(){if(confirm('Pour exporter en image :\n\n1. Cliquez OK pour ouvrir la fenêtre d\'impression\n2. Choisissez "Enregistrer en PDF"\n\nConseil : zoomez d\'abord avec Ctrl+- pour voir toutes les équipes.')){window.print();}}
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script>
 </body>
 </html>
