@@ -954,18 +954,97 @@ async function ficheTelecharger(){
   const btn=document.getElementById('btn-fiche-dl');
   btn.textContent='Génération…';btn.style.opacity='0.6';
   try{
-    const canvas=await html2canvas(document.getElementById('fiche-card'),{
-      backgroundColor:null,scale:3,useCORS:true,logging:false,
-      onclone:doc=>{
-        doc.getElementById('fiche-right-bg').style.clipPath='polygon(28% 0%,100% 0%,100% 100%,0% 100%)';
-      }
-    });
-    const a=document.createElement('a');
+    const mode=FICHE_MODES[_ficheMode];
     const nom=document.getElementById('fiche-nom').textContent;
     const prenom=document.getElementById('fiche-prenom').textContent;
+    const avEl=document.getElementById('fiche-av');
+    const imgEl=avEl.querySelector('img');
+
+    // Canvas haute résolution 3x (500×300 → 1500×900)
+    const S=3,CW=500*S,CH=300*S;
+    const cv=document.createElement('canvas');
+    cv.width=CW;cv.height=CH;
+    const c=cv.getContext('2d');
+
+    // Coin arrondi
+    function rrect(x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.arcTo(x+w,y,x+w,y+r,r);c.lineTo(x+w,y+h-r);c.arcTo(x+w,y+h,x+w-r,y+h,r);c.lineTo(x+r,y+h);c.arcTo(x,y+h,x,y+h-r,r);c.lineTo(x,y+r);c.arcTo(x,y,x+r,y,r);c.closePath();}
+
+    // Clip global arrondi
+    rrect(0,0,CW,CH,16*S);
+    c.save();c.clip();
+
+    // Fond beige
+    c.fillStyle='#F8F4EF';c.fillRect(0,0,CW,CH);
+
+    // Trapèze coloré (clip-path polygon identique au CSS)
+    // .fiche-bg-right : left=45% du card, width=55%
+    // clip-path polygon(28% 0%, 100% 0%, 100% 100%, 0% 100%)
+    const ex=0.45*CW;
+    const dtx=ex+0.28*(CW-ex);
+    c.fillStyle=mode.color;
+    c.beginPath();c.moveTo(dtx,0);c.lineTo(CW,0);c.lineTo(CW,CH);c.lineTo(ex,CH);c.closePath();c.fill();
+
+    // ---- TEXTE ----
+    const px=42*S;
+    c.textBaseline='top';
+
+    // Label (NOUVEAU SPV / ÉQUIPE X) avec letter-spacing
+    c.fillStyle=mode.color;
+    c.font=`700 ${15*S}px "Segoe UI",system-ui,sans-serif`;
+    let lx=px;
+    for(const ch of mode.label.toUpperCase()){c.fillText(ch,lx,26*S);lx+=c.measureText(ch).width+3*S;}
+
+    // NOM
+    c.fillStyle='#1a1a1a';
+    c.font=`700 ${36*S}px "Segoe UI",system-ui,sans-serif`;
+    c.fillText(nom,px,78*S);
+
+    // Prénom
+    c.fillStyle='#333';
+    c.font=`400 ${24*S}px "Segoe UI",system-ui,sans-serif`;
+    c.fillText(prenom,px,120*S);
+
+    // Divider
+    c.fillStyle=mode.color;
+    c.fillRect(px,188*S,36*S,3*S);
+
+    // CSP Vannes · SDIS 56 avec letter-spacing
+    c.fillStyle='#aaa';
+    c.font=`400 ${9*S}px "Segoe UI",system-ui,sans-serif`;
+    let ox=px;
+    for(const ch of 'CSP VANNES · SDIS 56'){c.fillText(ch,ox,200*S);ox+=c.measureText(ch).width+2.5*S;}
+
+    // ---- AVATAR ----
+    const acx=CW*0.80,acy=CH/2;
+    const ringR=79*S,avR=74*S;
+
+    // Anneau lumineux
+    c.save();
+    c.beginPath();c.arc(acx,acy,ringR,0,Math.PI*2);
+    c.fillStyle='rgba(255,255,255,0.22)';c.fill();
+    c.restore();
+
+    // Clip circulaire avatar
+    c.save();
+    c.beginPath();c.arc(acx,acy,avR,0,Math.PI*2);c.clip();
+
+    if(imgEl&&imgEl.src){
+      const img=new Image();
+      img.crossOrigin='anonymous';
+      await new Promise((res,rej)=>{img.onload=res;img.onerror=()=>res();img.src=imgEl.src;});
+      c.drawImage(img,acx-avR,acy-avR,avR*2,avR*2);
+    } else {
+      c.fillStyle='rgba(255,255,255,0.15)';c.fillRect(acx-avR,acy-avR,avR*2,avR*2);
+      c.fillStyle='#fff';c.font=`500 ${50*S}px "Segoe UI",system-ui,sans-serif`;
+      c.textAlign='center';c.textBaseline='middle';
+      c.fillText(avEl.textContent.trim(),acx,acy);
+    }
+    c.restore();c.restore();
+
+    const a=document.createElement('a');
     a.download='SPV_'+nom+'_'+prenom+'.png';
-    a.href=canvas.toDataURL('image/png');a.click();
-  }catch(e){showSync('Erreur téléchargement',true);}
+    a.href=cv.toDataURL('image/png');a.click();
+  }catch(e){showSync('Erreur téléchargement',true);console.error(e);}
   btn.innerHTML='⬇ Télécharger PNG';btn.style.opacity='1';
 }
 
