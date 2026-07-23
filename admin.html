@@ -495,7 +495,7 @@ const GORDER=["Colonel","Lieutenant-colonel","Commandant","Capitaine","Lieutenan
 const GBG={"Colonel":"#DBEAFE","Lieutenant-colonel":"#DBEAFE","Commandant":"#DBEAFE","Capitaine":"#DBEAFE","Lieutenant":"#DBEAFE","Sous-lieutenant":"#DBEAFE","Adjudant-chef":"#DCFCE7","Adjudant":"#DCFCE7","Sergent-chef":"#DCFCE7","Sergent":"#DCFCE7","Caporal-chef":"#FEF3C7","Caporal":"#FEF3C7","Sapeur 1ere classe":"#FFE4E6","Sapeur 2eme classe":"#FFE4E6"};
 const GTX={"Colonel":"#1E3A8A","Lieutenant-colonel":"#1E3A8A","Commandant":"#1E3A8A","Capitaine":"#1E3A8A","Lieutenant":"#1E3A8A","Sous-lieutenant":"#1E3A8A","Adjudant-chef":"#14532D","Adjudant":"#14532D","Sergent-chef":"#14532D","Sergent":"#14532D","Caporal-chef":"#78350F","Caporal":"#78350F","Sapeur 1ere classe":"#881337","Sapeur 2eme classe":"#881337"};
 
-let _undoSnapshot=null;
+let _undoSnapshot=null,_overNouveaux=false;
 function saveUndoSnapshot(){_undoSnapshot={members:members.map(m=>({...m})),teamRoles:JSON.parse(JSON.stringify(teamRoles))};}
 let members=[], supervisor={nom:'',prenom:'',grade:'Commandant',fonction:'Chef de centre',photo:null};
 let chefBureau={nom:'',prenom:'',grade:'Commandant',fonction:'Chef de bureau',photo:null};
@@ -658,7 +658,7 @@ function render(){
         <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
         <button class="mc-del" onclick="event.stopPropagation();supprimerNouveau('${m._fbKey}')">✕</button>
       </div>`).join('');
-    return`<div class="team-col" data-droptarget="nouveaux" style="background:#F0FDF4;border:2px dashed #166534" ondragover="event.preventDefault();mouseX=event.clientX;mouseY=event.clientY;this.style.borderColor='#15803D'" ondragleave="this.style.borderColor='#166534'">
+    return`<div class="team-col" data-droptarget="nouveaux" style="background:#F0FDF4;border:2px dashed #166534" ondragover="event.preventDefault();_overNouveaux=true;this.style.borderColor='#15803D'" ondragleave="_overNouveaux=false;this.style.borderColor='#166534'">
       <div class="team-total-banner" data-droptarget="nouveaux" style="background:#DCFCE7;color:#166534">${n}<div class="team-total-label" data-droptarget="nouveaux">nouveau${n>1?'x':''}</div></div>
       <div class="team-header" data-droptarget="nouveaux">
         <div class="team-dot" data-droptarget="nouveaux" style="background:#166534"></div>
@@ -877,9 +877,9 @@ function dragEnd(){
     const el=document.getElementById('mc-'+id);if(el)el.classList.remove('dragging');
     const els=document.elementsFromPoint(mouseX,mouseY);
 
-    // Détection colonne Nouveaux
-    const nouveauxCol=els.find(el=>el.dataset&&el.dataset.droptarget==='nouveaux');
-    if(nouveauxCol){
+    // Détection colonne Nouveaux via flag
+    if(_overNouveaux){
+      _overNouveaux=false;
       const m=members.find(x=>x.id===id);
       if(m){
         saveUndoSnapshot();
@@ -890,6 +890,7 @@ function dragEnd(){
       document.querySelectorAll('.team-col').forEach(c=>c.classList.remove('drag-over'));
       return;
     }
+    _overNouveaux=false;
 
     // Détection slot rôle
     const roleEl=els.find(el=>el.dataset&&el.dataset.role);
