@@ -658,7 +658,7 @@ function render(){
         <span class="mc-grade" style="background:${GBG[m.grade]||'#eee'};color:${GTX[m.grade]||'#333'}">${m.grade}</span>
         <button class="mc-del" onclick="event.stopPropagation();supprimerNouveau('${m._fbKey}')">✕</button>
       </div>`).join('');
-    return`<div class="team-col" style="background:#F0FDF4;border:2px dashed #166534">
+    return`<div class="team-col" style="background:#F0FDF4;border:2px dashed #166534" ondragover="event.preventDefault();this.style.borderColor='#15803D'" ondragleave="this.style.borderColor='#166534'" ondrop="dropToNouveaux(event);this.style.borderColor='#166534'">
       <div class="team-total-banner" style="background:#DCFCE7;color:#166534">${n}<div class="team-total-label">nouveau${n>1?'x':''}</div></div>
       <div class="team-header">
         <div class="team-dot" style="background:#166534"></div>
@@ -827,6 +827,25 @@ function roleCardDragStart(e,ti,type){
   document.getElementById('ghost').style.display='block';
   e.dataTransfer.setDragImage(document.getElementById('ghost'),42,42);
 }
+async function dropToNouveaux(e){
+  e.preventDefault();
+  const id=e.dataTransfer.getData('text/plain')||draggingId;
+  if(!id||id.startsWith('nouveau:')||id.startsWith('role:'))return;
+  const m=members.find(x=>x.id===id);if(!m)return;
+  saveUndoSnapshot();
+  // Ajouter dans Firebase nouveaux
+  try{
+    await fetch(DB+'/organigramme/nouveaux.json'+DB_AUTH,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nom:m.nom,prenom:m.prenom,grade:m.grade,photo:m.photo||null})
+    });
+  }catch(e){showSync('Erreur Firebase',true);}
+  members=members.filter(x=>x.id!==id);
+  await saveToFirebase();
+  await loadNouveaux();
+  render();showUndo();
+}
+
 function dragStartNouveau(e,fbKey){
   const n=nouveaux.find(x=>x._fbKey===fbKey);if(!n)return;
   draggingId='nouveau:'+fbKey;
