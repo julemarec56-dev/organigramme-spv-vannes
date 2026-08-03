@@ -260,6 +260,7 @@ function checkPw(){
     <button class="btn" id="undo-btn" onclick="undoLast()" disabled style="opacity:.4;cursor:not-allowed">↩ Annuler</button>
     <button class="btn" onclick="exportPDF()" style="background:#881337;color:#fff;border-color:#881337">🖨 Exporter PDF</button>
     <button class="btn" id="force-save-btn" onclick="forceSave()" style="background:#166534;color:#fff;border-color:#166534">💾 Forcer la sauvegarde</button>
+    <button class="btn" id="compress-btn" onclick="compressAllPhotos()" style="background:#92400E;color:#fff;border-color:#92400E">🗜 Compresser les photos</button>
     <input type="file" id="import-json-btn" accept=".json" style="display:none" onchange="importJSON(event)">
     <div style="flex:1"></div>
     <div style="position:relative;display:flex;align-items:center">
@@ -588,16 +589,18 @@ window.addEventListener('beforeunload',e=>{
 
 async function saveToFirebase(){
   isSaving=true;
-  const now=new Date();
-  const lastmod='Mis à jour le '+now.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})+' à '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  const el=document.getElementById('last-modified');if(el)el.textContent=lastmod;
-  const data={members,supervisor,chefBureau,teamRoles,lastmod};
-  // Aussi localStorage
-  localStorage.setItem('pv-members',JSON.stringify(members));
-  localStorage.setItem('pv-supervisor',JSON.stringify(supervisor));
-  localStorage.setItem('pv-chef',JSON.stringify(chefBureau));
-  localStorage.setItem('pv-roles',JSON.stringify(teamRoles));
   try{
+    const now=new Date();
+    const lastmod='Mis à jour le '+now.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})+' à '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    const el=document.getElementById('last-modified');if(el)el.textContent=lastmod;
+    const data={members,supervisor,chefBureau,teamRoles,lastmod};
+    // Aussi localStorage (best-effort : le quota du navigateur peut être dépassé à cause des photos, ça ne doit pas empêcher la sync Firebase)
+    try{
+      localStorage.setItem('pv-members',JSON.stringify(members));
+      localStorage.setItem('pv-supervisor',JSON.stringify(supervisor));
+      localStorage.setItem('pv-chef',JSON.stringify(chefBureau));
+      localStorage.setItem('pv-roles',JSON.stringify(teamRoles));
+    }catch(e){}
     const res=await fetch(DB+'/organigramme.json'+DB_AUTH,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     if(!res.ok) throw new Error();
     showSync('✓ Synchronisé');
@@ -614,8 +617,14 @@ async function forceSave(){
   const btn=document.getElementById('force-save-btn');
   const orig=btn.textContent;
   btn.disabled=true;btn.textContent='⏳ Sauvegarde…';
-  const ok=await saveToFirebase();
-  btn.disabled=false;btn.textContent=orig;
+  let ok=false;
+  try{
+    ok=await saveToFirebase();
+  }catch(e){
+    ok=false;
+  }finally{
+    btn.disabled=false;btn.textContent=orig;
+  }
   if(ok) showPublicReadyBanner();
 }
 
@@ -816,7 +825,7 @@ function saveChef(){
   chefBureau={nom:document.getElementById('chef-nom').value.trim().toUpperCase(),prenom:document.getElementById('chef-prenom').value.trim(),grade:document.getElementById('chef-grade').value,fonction:document.getElementById('chef-fonction').value.trim()||'Chef de bureau',photo:chefPhoto||null};
   document.getElementById('modal-chef').classList.remove('open');persist();renderChef();
 }
-function handleChefPhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{chefPhoto=ev.target.result;const p=document.getElementById('chef-photo-preview');p.src=chefPhoto;p.style.display='block';document.getElementById('chef-photo-hint').style.display='none';};r.readAsDataURL(f);}
+function handleChefPhoto(e){const f=e.target.files[0];if(!f)return;compressImage(f).then(dataUrl=>{chefPhoto=dataUrl;const p=document.getElementById('chef-photo-preview');p.src=chefPhoto;p.style.display='block';document.getElementById('chef-photo-hint').style.display='none';});}
 
 function openSup(){
   supPhoto=supervisor.photo||null;
@@ -833,7 +842,7 @@ function saveSup(){
   supervisor={nom:document.getElementById('sup-nom').value.trim().toUpperCase(),prenom:document.getElementById('sup-prenom').value.trim(),grade:document.getElementById('sup-grade').value,fonction:document.getElementById('sup-fonction').value.trim()||'Chef de centre',photo:supPhoto||null};
   document.getElementById('modal-sup').classList.remove('open');persist();renderSup();
 }
-function handleSupPhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{supPhoto=ev.target.result;const p=document.getElementById('sup-photo-preview');p.src=supPhoto;p.style.display='block';document.getElementById('sup-photo-hint').style.display='none';};r.readAsDataURL(f);}
+function handleSupPhoto(e){const f=e.target.files[0];if(!f)return;compressImage(f).then(dataUrl=>{supPhoto=dataUrl;const p=document.getElementById('sup-photo-preview');p.src=supPhoto;p.style.display='block';document.getElementById('sup-photo-hint').style.display='none';});}
 
 // ===================== ROLES =====================
 function openRole(ti,type){
@@ -847,7 +856,7 @@ function openRole(ti,type){
 }
 function saveRole(){saveUndoSnapshot();const{ti,type}=roleTarget;teamRoles[ti][type]={nom:document.getElementById('role-nom').value.trim().toUpperCase(),prenom:document.getElementById('role-prenom').value.trim(),grade:document.getElementById('role-grade').value,photo:rolePhoto||null};document.getElementById('modal-role').classList.remove('open');persist();render();showUndo();}
 function clearRole(){saveUndoSnapshot();const{ti,type}=roleTarget;teamRoles[ti][type]=emptyRole();document.getElementById('modal-role').classList.remove('open');persist();render();showUndo();}
-function handleRolePhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{rolePhoto=ev.target.result;const p=document.getElementById('role-photo-preview');p.src=rolePhoto;p.style.display='block';document.getElementById('role-photo-hint').style.display='none';};r.readAsDataURL(f);}
+function handleRolePhoto(e){const f=e.target.files[0];if(!f)return;compressImage(f).then(dataUrl=>{rolePhoto=dataUrl;const p=document.getElementById('role-photo-preview');p.src=rolePhoto;p.style.display='block';document.getElementById('role-photo-hint').style.display='none';});}
 
 // ===================== DRAG & DROP =====================
 function roleCardDragStart(e,ti,type){
@@ -985,11 +994,56 @@ function drop(e,ti){
   const m=members.find(x=>x.id===id);if(m&&m.team!==ti){saveUndoSnapshot();m.team=ti;persist();render();showUndo();}
 }
 
+// ===================== PHOTOS =====================
+function compressDataUrl(dataUrl,maxSize=240,quality=0.8){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(w>h){if(w>maxSize){h=Math.round(h*maxSize/w);w=maxSize;}}
+      else{if(h>maxSize){w=Math.round(w*maxSize/h);h=maxSize;}}
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg',quality));
+    };
+    img.onerror=()=>resolve(dataUrl);
+    img.src=dataUrl;
+  });
+}
+function compressImage(file,maxSize=240,quality=0.8){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{compressDataUrl(ev.target.result,maxSize,quality).then(resolve);};
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function compressAllPhotos(){
+  const btn=document.getElementById('compress-btn');
+  const orig=btn?btn.textContent:null;
+  if(btn){btn.disabled=true;btn.textContent='⏳ Compression…';}
+  try{
+    for(const m of members){if(m.photo)m.photo=await compressDataUrl(m.photo);}
+    if(supervisor.photo)supervisor.photo=await compressDataUrl(supervisor.photo);
+    if(chefBureau.photo)chefBureau.photo=await compressDataUrl(chefBureau.photo);
+    for(const tr of teamRoles){
+      if(tr.chef&&tr.chef.photo)tr.chef.photo=await compressDataUrl(tr.chef.photo);
+      if(tr.adjoint&&tr.adjoint.photo)tr.adjoint.photo=await compressDataUrl(tr.adjoint.photo);
+    }
+    render();
+    const ok=await saveToFirebase();
+    if(ok)showPublicReadyBanner();
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=orig;}
+  }
+}
+
 // ===================== AGENTS CRUD =====================
 function openAdd(ti){editId=null;curPhoto=null;document.getElementById('modal-title').textContent='Ajouter un agent';document.getElementById('btn-del').style.display='none';document.getElementById('f-nom').value='';document.getElementById('f-prenom').value='';document.getElementById('f-grade').value='Sapeur 2eme classe';document.getElementById('f-team').value=ti??0;const p=document.getElementById('photo-preview');p.style.display='none';document.getElementById('photo-hint').style.display='';document.getElementById('modal').classList.add('open');}
 function openEdit(id){const m=members.find(x=>x.id===id);if(!m)return;editId=id;curPhoto=m.photo||null;document.getElementById('modal-title').textContent='Modifier';document.getElementById('btn-del').style.display='';document.getElementById('f-nom').value=m.nom||'';document.getElementById('f-prenom').value=m.prenom||'';document.getElementById('f-grade').value=m.grade;document.getElementById('f-team').value=m.team;const p=document.getElementById('photo-preview');if(m.photo){p.src=m.photo;p.style.display='block';document.getElementById('photo-hint').style.display='none';}else{p.style.display='none';document.getElementById('photo-hint').style.display='';}document.getElementById('modal').classList.add('open');}
 function closeModal(){document.getElementById('modal').classList.remove('open');}
-function handlePhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{curPhoto=ev.target.result;const p=document.getElementById('photo-preview');p.src=curPhoto;p.style.display='block';document.getElementById('photo-hint').style.display='none';};r.readAsDataURL(f);}
+function handlePhoto(e){const f=e.target.files[0];if(!f)return;compressImage(f).then(dataUrl=>{curPhoto=dataUrl;const p=document.getElementById('photo-preview');p.src=curPhoto;p.style.display='block';document.getElementById('photo-hint').style.display='none';});}
 function save(){const nom=document.getElementById('f-nom').value.trim().toUpperCase();const prenom=document.getElementById('f-prenom').value.trim();if(!nom||!prenom){alert('NOM et Prénom obligatoires');return;}const d={id:editId||Date.now().toString(36)+Math.random().toString(36).slice(2,5),nom,prenom,grade:document.getElementById('f-grade').value,team:parseInt(document.getElementById('f-team').value),photo:curPhoto||null};if(editId){const i=members.findIndex(x=>x.id===editId);if(i>=0)members[i]=d;}else members.push(d);closeModal();persist();render();}
 function del(id){confirmAction('🗑 Supprimer','Supprimer définitivement cet agent ?',()=>{saveUndoSnapshot();members=members.filter(m=>m.id!==id);persist();render();showUndo();});}
 function deleteCurrent(){if(editId){del(editId);closeModal();}}
