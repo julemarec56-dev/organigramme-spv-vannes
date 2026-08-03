@@ -103,7 +103,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   .teams-grid>*{display:block;width:100%;margin-bottom:14px}
   .team-col{width:100%!important}
   .team-members{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .role-slots{display:grid;grid-template-columns:1fr;gap:6px}
   .mc-avatar{width:60px;height:60px;font-size:14px}
   .mc-avatar img{width:60px;height:60px}
   .mc-nom{font-size:9px}
@@ -349,13 +348,15 @@ function render(data, nouveaux=[]){
           <div><div style="font-size:10px;font-weight:700;color:${t.color};text-transform:uppercase">Adjoint</div><div style="font-size:13px;font-weight:700">${(roles.adjoint.nom||'').toUpperCase()} ${roles.adjoint.prenom||''}</div></div>
         </div>` : '';
       const membersHTML = list.map(m=>memberCardHTML(m,t)).join('');
+      const roleExtra = ti>=0 ? (roles&&roles.chef&&roles.chef.nom?1:0)+(roles&&roles.adjoint&&roles.adjoint.nom?1:0) : 0;
+      const sectionTotal = list.length + roleExtra;
       return`<div style="background:#fff;border-radius:14px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)">
         <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.acc-arrow').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'"
           style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:${t.light};cursor:pointer">
           <div style="width:12px;height:12px;border-radius:50%;background:${t.color};flex-shrink:0"></div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:800;color:${t.color};text-transform:uppercase;letter-spacing:.5px">${t.name}</div>
-            <div style="font-size:11px;color:${t.color};opacity:.7;margin-top:1px">${list.length} agent${list.length>1?'s':''}</div>
+            <div style="font-size:11px;color:${t.color};opacity:.7;margin-top:1px">${sectionTotal} agent${sectionTotal>1?'s':''}</div>
           </div>
           <span class="acc-arrow" style="color:${t.color};font-size:13px">▶</span>
         </div>
