@@ -1,4 +1,4 @@
-const CACHE = 'spv-vannes-v6';
+const CACHE = 'spv-vannes-v7';
 const ASSETS = [
   '/organigramme-spv-vannes/icons/icon-192.png',
   '/organigramme-spv-vannes/icons/icon-512.png'
@@ -15,11 +15,14 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // HTML, Firebase : toujours réseau
-  if (e.request.url.includes('firebasedatabase') ||
-      e.request.url.includes('firebase') ||
-      e.request.url.endsWith('.html') ||
-      e.request.url.endsWith('/')) {
+  const url = e.request.url;
+  // HTML et Firebase : toujours réseau, jamais de cache
+  if (url.includes('firebasedatabase') ||
+      url.includes('firebase') ||
+      url.endsWith('.html') ||
+      url.endsWith('/') ||
+      url.includes('?')) {
+    e.respondWith(fetch(e.request, {cache: 'no-store'}).catch(() => caches.match(e.request)));
     return;
   }
   // Icônes uniquement : cache
