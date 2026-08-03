@@ -259,6 +259,7 @@ function checkPw(){
     <button class="btn" onclick="document.getElementById('import-json-btn').click()">📂 Importer JSON</button>
     <button class="btn" id="undo-btn" onclick="undoLast()" disabled style="opacity:.4;cursor:not-allowed">↩ Annuler</button>
     <button class="btn" onclick="exportPDF()" style="background:#881337;color:#fff;border-color:#881337">🖨 Exporter PDF</button>
+    <button class="btn" id="force-save-btn" onclick="forceSave()" style="background:#166534;color:#fff;border-color:#166534">💾 Forcer la sauvegarde</button>
     <input type="file" id="import-json-btn" accept=".json" style="display:none" onchange="importJSON(event)">
     <div style="flex:1"></div>
     <div style="position:relative;display:flex;align-items:center">
@@ -580,7 +581,13 @@ function notifierNouveau(n){
   else if(Notification.permission!=='denied'){Notification.requestPermission().then(p=>{if(p==='granted')new Notification('SPV Vannes',{body:`${n} nouveau${n>1?'x':''} inscrit${n>1?'s':''}`,icon:'icons/icon-192.png'});});}
 }
 
+let isSaving=false;
+window.addEventListener('beforeunload',e=>{
+  if(isSaving){e.preventDefault();e.returnValue='';}
+});
+
 async function saveToFirebase(){
+  isSaving=true;
   const now=new Date();
   const lastmod='Mis à jour le '+now.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})+' à '+now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   const el=document.getElementById('last-modified');if(el)el.textContent=lastmod;
@@ -594,7 +601,36 @@ async function saveToFirebase(){
     const res=await fetch(DB+'/organigramme.json'+DB_AUTH,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     if(!res.ok) throw new Error();
     showSync('✓ Synchronisé');
-  }catch(e){showSyncError('⚠ Firebase inaccessible — données sauvegardées localement uniquement. Cliquez pour fermer.');}
+    return true;
+  }catch(e){
+    showSyncError('⚠ Firebase inaccessible — données sauvegardées localement uniquement. Cliquez pour fermer.');
+    return false;
+  }finally{
+    isSaving=false;
+  }
+}
+
+async function forceSave(){
+  const btn=document.getElementById('force-save-btn');
+  const orig=btn.textContent;
+  btn.disabled=true;btn.textContent='⏳ Sauvegarde…';
+  const ok=await saveToFirebase();
+  btn.disabled=false;btn.textContent=orig;
+  if(ok) showPublicReadyBanner();
+}
+
+function showPublicReadyBanner(){
+  let b=document.getElementById('notif-save');
+  if(!b){
+    b=document.createElement('div');
+    b.id='notif-save';
+    b.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#166534;color:#fff;padding:12px 24px;border-radius:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);font-size:14px;font-weight:600;display:flex;align-items:center;gap:12px;cursor:pointer';
+    b.onclick=()=>b.remove();
+    document.body.appendChild(b);
+  }
+  b.innerHTML='✓ Enregistré — visible sur la page publique  <span style="font-size:18px;line-height:1">✕</span>';
+  b.style.display='flex';
+  clearTimeout(b._t);b._t=setTimeout(()=>b.remove(),5000);
 }
 
 async function deleteNouveau(fbKey){
@@ -871,41 +907,45 @@ function dragStart(e,id){
   e.dataTransfer.setDragImage(document.getElementById('ghost'),42,42);
   setTimeout(()=>{const el=document.getElementById('mc-'+id);if(el)el.classList.add('dragging');},0);
 }
-function dragEnd(){
+function dragEnd(e){
+  _overNouveaux=false;
   const id=draggingId;
-  if(id&&!id.startsWith('nouveau:')){
-    const el=document.getElementById('mc-'+id);if(el)el.classList.remove('dragging');
-    const els=document.elementsFromPoint(mouseX,mouseY);
+  draggingId=null;
+  document.getElementById('ghost').style.display='none';
+  document.querySelectorAll('.team-col').forEach(c=>c.classList.remove('drag-over'));
+  document.querySelectorAll('.role-card.drag-over').forEach(c=>c.classList.remove('drag-over'));
 
-    // Détection colonne Nouveaux via flag
-    if(_overNouveaux){
-      _overNouveaux=false;
+  if(!id||id.startsWith('nouveau:'))return;
+  const el=document.getElementById('mc-'+id);if(el)el.classList.remove('dragging');
+
+  // Coordonnées au lâcher
+  const cx=e.clientX,cy=e.clientY;
+
+  // Détection colonne Nouveaux via bounding box
+  const nouveauxEl=document.querySelector('.team-col[data-droptarget="nouveaux"]');
+  if(nouveauxEl){
+    const r=nouveauxEl.getBoundingClientRect();
+    if(cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom){
       const m=members.find(x=>x.id===id);
       if(m){
         saveUndoSnapshot();
         fetch(DB+'/organigramme/nouveaux.json'+DB_AUTH,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nom:m.nom,prenom:m.prenom,grade:m.grade,photo:m.photo||null})})
           .then(()=>{members=members.filter(x=>x.id!==id);saveToFirebase();loadNouveaux().then(()=>render());showUndo();});
       }
-      draggingId=null;document.getElementById('ghost').style.display='none';
-      document.querySelectorAll('.team-col').forEach(c=>c.classList.remove('drag-over'));
       return;
     }
-    _overNouveaux=false;
-
-    // Détection slot rôle
-    const roleEl=els.find(el=>el.dataset&&el.dataset.role);
-    if(roleEl){
-      const type=roleEl.dataset.role;
-      const colEl=roleEl.closest('[id^="team-"]');
-      const ti=colEl?parseInt(colEl.id.split('-')[1]):-1;
-      const m=members.find(x=>x.id===id);
-      if(m&&ti>=0){teamRoles[ti][type]={nom:m.nom,prenom:m.prenom,grade:m.grade,photo:m.photo||null};members=members.filter(x=>x.id!==id);persist();render();}
-    }
   }
-  draggingId=null;
-  document.getElementById('ghost').style.display='none';
-  document.querySelectorAll('.team-col').forEach(c=>c.classList.remove('drag-over'));
-  document.querySelectorAll('.role-card.drag-over').forEach(c=>c.classList.remove('drag-over'));
+
+  // Détection slot rôle
+  const els=document.elementsFromPoint(cx,cy);
+  const roleEl=els.find(el=>el.dataset&&el.dataset.role);
+  if(roleEl){
+    const type=roleEl.dataset.role;
+    const colEl=roleEl.closest('[id^="team-"]');
+    const ti=colEl?parseInt(colEl.id.split('-')[1]):-1;
+    const m=members.find(x=>x.id===id);
+    if(m&&ti>=0){teamRoles[ti][type]={nom:m.nom,prenom:m.prenom,grade:m.grade,photo:m.photo||null};members=members.filter(x=>x.id!==id);persist();render();}
+  }
 }
 function dragOver(e,ti){
   e.preventDefault();mouseX=e.clientX;mouseY=e.clientY;
